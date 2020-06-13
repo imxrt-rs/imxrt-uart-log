@@ -1,6 +1,6 @@
 # imxrt-uart-log
 
-A logging implementation for i.MX RT processors, letting users log data over a serial connection.
+A logging implementation for i.MX RT processors, letting users log data over a serial interface.
 
 1. Configure an [`imxrt-hal`] UART peripheral
 2. Set the logger with `init()`

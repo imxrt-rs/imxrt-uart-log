@@ -1,13 +1,13 @@
-//! Log over UART from an i.MX RT processor
+//! Log over serial from an i.MX RT processor
 //!
 //! The crate provides a [`log`](https://crates.io/crates/log) implementation that
-//! pipes data over UART. It's an extension to the [`imxrt-hal`](https://crates.io/crates/imxrt-hal)
-//! crate. To log data over UART,
+//! transfers data over UART. It's an extension to the [`imxrt-hal`](https://crates.io/crates/imxrt-hal)
+//! crate. To log data,
 //!
 //! 1. Configure a UART peripheral with baud rates, parities, inversions, etc.
 //! 2. Call [`init`](fn.init.html) with a [`LoggingConfig`](struct.LoggingConfig.html). If the default
 //!    logging behavior is acceptable, use `Default::default()` to skip logging configuration.
-//! 3. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data over UART
+//! 3. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data
 //!
 //! The implementation blocks, buffering data into the UART transfer FIFO, until the final
 //! bytes are enqueued in the FIFO. The implementation logs data **in an interrupt free

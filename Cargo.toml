@@ -3,11 +3,12 @@ name = "imxrt-uart-log"
 version = "0.1.0"
 authors = ["Ian McIntyre <ianpmcintyre@gmail.com>"]
 edition = "2018"
-description = "An i.MX RT-specific `log` implementation which writes data over UART"
+description = "An i.MX RT-specific `log` implementation which writes data over a serial interface"
 readme = "README.md"
 keywords = ["imxrt", "nxp", "embedded", "log"]
 categories = ["embedded", "no-std"]
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/imxrt-rs/imxrt-uart-log"
 
 [dependencies]
 embedded-hal = "0.2.3"
