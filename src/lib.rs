@@ -1,17 +1,19 @@
-//! Log from an i.MX RT processor over UART
+//! Log over UART from an i.MX RT processor
 //!
 //! The crate provides a [`log`](https://crates.io/crates/log) implementation that
-//! pipes data over UART. Users are expected to configure a UART peripheral with baud
-//! rates, parities, inversions, etc. After configuring the peripheral, users should
-//! call [`init`](fn.init.html) to prepare the logger.
+//! pipes data over UART. It's an extension to the [`imxrt-hal`](https://crates.io/crates/imxrt-hal)
+//! crate. To log data over UART,
+//!
+//! 1. Configure a UART peripheral with baud rates, parities, inversions, etc.
+//! 2. Call [`init`](fn.init.html) with a [`LoggingConfig`](struct.LoggingConfig.html). If the default
+//!    logging behavior is acceptable, use `Default::default()` to skip logging configuration.
+//! 3. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data over UART
 //!
 //! The implementation blocks, buffering data into the UART transfer FIFO, until the final
 //! bytes are enqueued in the FIFO. The implementation logs data **in an interrupt free
-//! critical section**. Logging will not be preempted by an interrupt; logging may reduce
-//! your system's responsiveness. It is safe to log from interrupt, fault, or panic handlers.
-//!
-//! Specify your maximum log level, and filter messages, using a
-//! [`LoggingConfig`](struct.LoggingConfig.html).
+//! critical section**. Interrupts **will not** preempt logging, and logging may reduce
+//! the system's responsiveness. To evaluate some simple performance measurements, see
+//! [Performance](#performance).
 //!
 //! # Example
 //!
@@ -48,12 +50,27 @@
 //!
 //! # Performance
 //!
-//! We measured logging execution on a Teensy 4, running at 600MHz. We configured
+//! We measured logging execution on a Teensy 4, with a 600MHz ARM clock. We configured
 //! a UART peripheral following the example above. Using a general purpose timer (GPT),
 //! we measured the time required to write various log messages. We verified GPT timings
 //! with a logic analyzer, which observed a pulse on a GPIO.
 //!
-//! | Code                                                  | Execution Time (ms) |
+//! By default, a logging call resembling
+//!
+//! ```text
+//! log::info!("Hello world! 3 + 2 = {}", 3 + 2);
+//! ```
+//!
+//! Produces a message resembling
+//!
+//! ```text
+//! [INFO log_uart]: Hello world! 3 + 2 = 5
+//! ```
+//!
+//! where `INFO` describes the log level, `log_uart` describes the module, and the remainder
+//! of the message is the serialized content.
+//!
+//! | Logging Invocation                                    | Execution Time (ms) |
 //! | ----------------------------------------------------- | ------------------- |
 //! | `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 3.12                |
 //! | `log::info!("Hello world! 3 + 2 = 5");`               | 3.12                |
@@ -100,7 +117,8 @@ pub struct LoggingConfig {
     ///
     /// If set to an empty slice (default), the logger performs no
     /// filtering. Otherwise, we filter the specified targets by
-    /// the accompanying log level. If there is no level, we default
+    /// the accompanying log level. If there is no level, we allow
+    /// all levels.
     pub filters: &'static [(&'static str, Option<::log::LevelFilter>)],
 }
 
@@ -279,12 +297,12 @@ impl From<::log::SetLoggerError> for SetLoggerError {
     }
 }
 
-/// Initialize the transfer half of a UART peripheral to be the logging sink
+/// Initialize the logger with a UART's transfer half
 ///
 /// `tx` should be an `imxrt_hal::uart::Tx` half, obtained by calling `split()`
 /// on a `UART` peripheral. Returns an error if you've already called `init()`.
 ///
-/// See the [module-level example](index.html#example) for more information.
+/// See the [module-level documentation](index.html#example) for an example.
 pub fn init<S>(tx: S, config: LoggingConfig) -> Result<(), SetLoggerError>
 where
     S: Into<Sink>,
