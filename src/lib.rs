@@ -19,7 +19,7 @@
 //!
 //! ```no_run
 //! use imxrt_hal;
-//! use imxrt_uart_log as log;
+//! use imxrt_uart_log;
 //!
 //! let mut peripherals = imxrt_hal::Peripherals::take().unwrap();
 //!
@@ -38,12 +38,12 @@
 //!     )
 //!     .unwrap();
 //!
-//! // Recommended to use a larger TX FIFO size
+//! // Consider using a large TX FIFO size
 //! uart.set_tx_fifo(core::num::NonZeroU8::new(4));
 //! // Set other UART configurations...
 //!
 //! let (tx, rx) = uart.split();
-//! log::init(tx, log::LoggingConfig::default()).unwrap();
+//! imxrt_uart_log::init(tx, Default::default()).unwrap();
 //!
 //! // At this point, you may use log macros to write data.
 //! ```
@@ -75,7 +75,7 @@
 //! | `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 3.12                |
 //! | `log::info!("Hello world! 3 + 2 = 5");`               | 3.12                |
 //! | `log::info!("");`                                     | 1.22                |
-//! | `log::info("12345678901234567890..."); // 100 chars`  | 9.88                |
+//! | `log::info!(/* 100 character string */);`             | 9.88                |
 
 #![no_std]
 
