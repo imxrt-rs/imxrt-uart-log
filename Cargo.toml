@@ -1,0 +1,17 @@
+[package]
+name = "imxrt-uart-log"
+version = "0.1.0"
+authors = ["Ian McIntyre <ianpmcintyre@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+embedded-hal = "0.2.3"
+log = "0.4.8"
+cortex-m = "0.6.2"
+
+[dependencies.imxrt-hal]
+path = "../imxrt/imxrt-hal"
+
+[features] # TODO remove default feature, add features for other chips
+default = ["imxrt1062"]
+imxrt1062 = ["imxrt-hal/imxrt1062"]
