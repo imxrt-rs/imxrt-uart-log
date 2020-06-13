@@ -45,6 +45,20 @@
 //!
 //! // At this point, you may use log macros to write data.
 //! ```
+//!
+//! # Performance
+//!
+//! We measured logging execution on a Teensy 4, running at 600MHz. We configured
+//! a UART peripheral following the example above. Using a general purpose timer (GPT),
+//! we measured the time required to write various log messages. We verified GPT timings
+//! with a logic analyzer, which observed a pulse on a GPIO.
+//!
+//! | Code                                                  | Execution Time (ms) |
+//! | ----------------------------------------------------- | ------------------- |
+//! | `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 3.12                |
+//! | `log::info!("Hello world! 3 + 2 = 5");`               | 3.12                |
+//! | `log::info!("");`                                     | 1.22                |
+//! | `log::info("12345678901234567890..."); // 100 chars`  | 9.88                |
 
 #![no_std]
 
