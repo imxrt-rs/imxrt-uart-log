@@ -1,4 +1,4 @@
-//! Log over serial from an i.MX RT processor
+//! Logging over an i.MX RT serial interface
 //!
 //! The crate provides a [`log`](https://crates.io/crates/log) implementation that
 //! transfers data over UART. It's an extension to the [`imxrt-hal`](https://crates.io/crates/imxrt-hal)
