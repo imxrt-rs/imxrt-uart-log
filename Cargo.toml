@@ -26,3 +26,19 @@ branch = "proto/uart-log-release"
 # it here. For convenience, we make it the default.
 default = ["imxrt1062"]
 imxrt1062 = ["imxrt-hal/imxrt1062"]
+
+[dev-dependencies.teensy4-rt]
+git = "https://github.com/mciantyre/teensy4-rs.git"
+branch = "development"
+
+[dev-dependencies.teensy4-fcb]
+git = "https://github.com/mciantyre/teensy4-rs.git"
+branch = "development"
+
+[dev-dependencies.imxrt-hal]
+git = "https://github.com/mciantyre/imxrt-rs"
+branch = "proto/uart-log-release"
+features = ["imxrt1062", "rt"]
+
+[dev-dependencies]
+panic-halt = "0.2.0"
