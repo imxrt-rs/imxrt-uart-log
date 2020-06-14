@@ -48,6 +48,15 @@
 //! // At this point, you may use log macros to write data.
 //! ```
 //!
+//! # i.MX RT Compatibility
+//!
+//! This crate supports all of the same i.MX RT variants as the `imxrt-hal` crate.
+//! To see the supported i.MX RT variants, check the [HAL's feature support](https://github.com/imxrt-rs/imxrt-rs#hal) list.
+//!
+//! **Note**: As of this writing, the HAL only supports one i.MX RT variant, the `"imxrt1062"`.
+//! For convenience, the `"imxrt1062"` feature is enabled **by default**. This may change in the
+//! future.
+//!
 //! # Performance
 //!
 //! We measured logging execution on a Teensy 4, with a 600MHz ARM clock. We configured

@@ -50,6 +50,12 @@ imxrt_uart_log::init(tx, Default::default()).unwrap();
 - `panic!()` handlers, and printing panic messages
 - Unambiguously detecting interrupts and faults
 
+## i.MX RT Compatibility
+
+This crate supports all of the same i.MX RT variants as the [`imxrt-hal`] crate. To see the supported i.MX RT variants, check the [HAL's feature support](https://github.com/imxrt-rs/imxrt-rs#hal) list.
+
+> :information_source: As of this writing, the HAL only supports one i.MX RT variant, the `"imxrt1062"`. For convenience, the `"imxrt1062"` feature is this crate's **default** feature. This default feature may change in future releases.
+
 ## Implementation
 
 The implementation blocks, buffering data into the UART transfer FIFO, until the final bytes are enqueued in the FIFO. The implementation logs data **in an interrupt free critical section**. Interrupts **will not** preempt logging. Logging may reduce the system's responsiveness.
