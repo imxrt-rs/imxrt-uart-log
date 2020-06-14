@@ -85,6 +85,8 @@
 //! | `log::info!("Hello world! 3 + 2 = 5");`               | 3.12                |
 //! | `log::info!("");`                                     | 1.22                |
 //! | `log::info!(/* 100 character string */);`             | 9.88                |
+//!
+//! See this crate's examples to reproduce this test.
 
 #![no_std]
 

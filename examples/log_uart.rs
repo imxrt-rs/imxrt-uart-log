@@ -8,6 +8,7 @@
 #![no_main]
 
 extern crate panic_halt;
+#[cfg(target_arch = "arm")]
 extern crate teensy4_fcb;
 
 use core::time::Duration;
@@ -41,7 +42,7 @@ unsafe fn GPT1() {
 #[entry]
 fn main() -> ! {
     let mut peripherals = imxrt_hal::Peripherals::take().unwrap();
-
+    
     let (_, ipg_hz) = peripherals.ccm.pll1.set_arm_clock(
         imxrt_hal::ccm::PLL1::ARM_HZ,
         &mut peripherals.ccm.handle,

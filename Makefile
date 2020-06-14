@@ -33,3 +33,7 @@ log_uart: examples
 test:
 	@cargo test --lib
 	@cargo test --doc
+
+.PHONY: clean
+clean:
+	@cargo clean

@@ -13,37 +13,6 @@ Built on the [`imxrt-hal`] hardware abstraction layer for i.MX RT processors, ve
 [`imxrt-hal`]: https://crates.io/crates/imxrt-hal
 [`log`]: https://crates.io/crates/log
 
-```rust
-use imxrt_hal;
-use imxrt_uart_log;
-
-let mut peripherals = imxrt_hal::Peripherals::take().unwrap();
-
-let uarts = peripherals.uart.clock(
-    &mut peripherals.ccm.handle,
-    imxrt_hal::ccm::uart::ClockSelect::OSC,
-    imxrt_hal::ccm::uart::PrescalarSelect::DIVIDE_1,
-);
-
-let mut uart = uarts
-    .uart2
-    .init(
-        peripherals.iomuxc.gpio_ad_b1_02.alt2(),
-        peripherals.iomuxc.gpio_ad_b1_03.alt2(),
-        115_200,
-    )
-    .unwrap();
-
-// Consider using a large TX FIFO size
-uart.set_tx_fifo(core::num::NonZeroU8::new(4));
-// Set other UART configurations...
-
-let (tx, rx) = uart.split();
-imxrt_uart_log::init(tx, Default::default()).unwrap();
-
-// At this point, you may use log macros to write data.
-```
-
 ## Use-cases
 
 - Simply debugging applications and libraries
@@ -62,7 +31,7 @@ The implementation blocks, buffering data into the UART transfer FIFO, until the
 
 ## Performance
 
-The table below describes the execution time for logging statements on a Teensy 4. For more information on the test setup, consult the crate documentation.
+The table below describes the execution time for logging statements on a Teensy 4. For more information on the test setup, consult the crate documentation, or see the [`log_uart.rs` example](examples/log_uart.rs).
 
 | Logging Invocation                                    | Execution Time (ms) |
 | ----------------------------------------------------- | ------------------- |
@@ -70,6 +39,22 @@ The table below describes the execution time for logging statements on a Teensy 
 | `log::info!("Hello world! 3 + 2 = 5");`               | 3.12                |
 | `log::info!("");`                                     | 1.22                |
 | `log::info!(/* 100 character string */);`             | 9.88                |
+
+## Testing
+
+The crate's examples run on hardware. See the documentation at the top of each example for more information.
+
+For examples that run on a Teensy 4, you'll need the build dependencies described in the [`teensy4-rs` project](https://github.com/mciantyre/teensy4-rs#dependencies).
+
+Use `make` to build an example:
+
+```
+make log_uart
+```
+
+When building an example for the Teensy 4, the build will print the location of the `*.hex` file. You may download the file to a Teensy using either the [Teensy Loader Application](https://www.pjrc.com/teensy/loader.html) or the [`teensy_loader_cli`](https://github.com/PaulStoffregen/teensy_loader_cli) command-line Teensy loader.
+
+To run this crate's unit tests, and to check documentation examples, use `make test`.
 
 ## License
 
