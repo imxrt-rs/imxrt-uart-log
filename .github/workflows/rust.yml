@@ -16,7 +16,6 @@ jobs:
         with:
             toolchain: stable
             components: clippy
-            target: thumbv7em-none-eabihf
             override: true
       - uses: actions-rs/clippy-check@v1
         with:
@@ -38,8 +37,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Run tests and check documentation
-      uses: actions-rs/cargo@v1
-      with:
-          command: test
-          args: --verbose
+    - name: Run tests and check documentation examples
+      run: make test
+
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install build dependencies
+        run: sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            target: thumbv7em-none-eabihf
+            override: true
+      - name: Make log UART example
+        run: make examples
