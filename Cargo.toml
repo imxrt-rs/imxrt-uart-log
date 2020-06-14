@@ -31,7 +31,8 @@ imxrt1062 = ["imxrt-hal/imxrt1062"]
 git = "https://github.com/mciantyre/teensy4-rs.git"
 branch = "development"
 
-[dev-dependencies.teensy4-fcb]
+# Only necessary for linking a Teensy 4 binary
+[target.thumbv7em-none-eabihf.dev-dependencies.teensy4-fcb]
 git = "https://github.com/mciantyre/teensy4-rs.git"
 branch = "development"
 
