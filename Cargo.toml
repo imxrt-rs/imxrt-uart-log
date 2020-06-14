@@ -16,8 +16,13 @@ log = "0.4.8"
 cortex-m = "0.6.2"
 
 [dependencies.imxrt-hal]
-path = "../imxrt/imxrt-hal"
+git = "https://github.com/mciantyre/imxrt-rs"
+branch = "proto/uart-log-release"
 
-[features] # TODO remove default feature, add features for other chips
+[features]
+# TODO add features for other variants once available in the HAL.
+#
+# Since the HAL only supports the imxrt1062 right now, we only support
+# it here. For convenience, we make it the default.
 default = ["imxrt1062"]
 imxrt1062 = ["imxrt-hal/imxrt1062"]

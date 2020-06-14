@@ -1,5 +1,7 @@
 # imxrt-uart-log
 
+> :warning: This crate is built upon an unreleased [`imxrt-hal`] crate. To track the release progress, see [`imxrt-hal` #59](https://github.com/imxrt-rs/imxrt-rs/issues/59).
+
 A logging implementation for i.MX RT processors, letting users log data over a serial interface.
 
 1. Configure an [`imxrt-hal`] UART peripheral
