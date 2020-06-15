@@ -90,7 +90,11 @@
 
 #![no_std]
 
+mod filters;
 mod sink;
+
+use filters::Filters;
+pub use filters::ModuleLevel;
 use sink::Sink;
 
 use core::cell::RefCell;
@@ -107,7 +111,7 @@ use cortex_m::interrupt::{self, Mutex};
 /// If the default configuration is good for you, use `Default::default()` with
 /// [`init`](fn.init.html).
 pub struct LoggingConfig {
-    /// The max log level
+    /// The max log level for *all* logging
     ///
     /// By default, we select the static max level. Users may
     /// override this if they'd like to bypass the statically-assigned
@@ -119,7 +123,7 @@ pub struct LoggingConfig {
     /// filtering. Otherwise, we filter the specified targets by
     /// the accompanying log level. If there is no level, we allow
     /// all levels.
-    pub filters: &'static [(&'static str, Option<::log::LevelFilter>)],
+    pub filters: &'static [ModuleLevel],
 }
 
 impl Default for LoggingConfig {
@@ -136,33 +140,13 @@ struct Logger {
     uart: Mutex<RefCell<Sink>>,
     /// A collection of targets that we are expected
     /// to filter. If this is empty, we allow everything
-    filters: &'static [(&'static str, Option<::log::LevelFilter>)],
-}
-
-impl Logger {
-    /// Returns true if the target is in the filter, else false if the target is
-    /// not in the list of kept targets. If the filter collection is empty, return
-    /// true.
-    fn filtered(&self, metadata: &::log::Metadata) -> bool {
-        if self.filters.is_empty() {
-            true
-        } else if let Some(idx) = self
-            .filters
-            .iter()
-            .position(|&(target, _)| target == metadata.target())
-        {
-            let (_, lvl) = self.filters[idx];
-            lvl.is_none() || lvl.filter(|lvl| metadata.level() <= *lvl).is_some()
-        } else {
-            false
-        }
-    }
+    filters: Filters,
 }
 
 impl log::Log for Logger {
     fn enabled(&self, metadata: &::log::Metadata) -> bool {
         metadata.level() <= ::log::max_level() // The log level is appropriate
-            && self.filtered(metadata) // The target is in the filter list
+            && self.filters.is_enabled(metadata) // The target is in the filter list
     }
 
     fn log(&self, record: &::log::Record) {
@@ -223,7 +207,7 @@ where
         if logger.is_none() {
             *logger = Some(Logger {
                 uart: Mutex::new(RefCell::new(tx.into())),
-                filters: config.filters,
+                filters: Filters(config.filters),
             });
         }
 
