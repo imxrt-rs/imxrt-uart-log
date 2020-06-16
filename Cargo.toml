@@ -26,6 +26,12 @@ branch = "proto/uart-log-release"
 # it here. For convenience, we make it the default.
 default = ["imxrt1062"]
 imxrt1062 = ["imxrt-hal/imxrt1062"]
+# Bring Your Own Buffer
+#
+# Disables the default DMA static buffer, and exposes an interface for users to specify
+# their own buffer. Use this if you want a smaller or larger DMA buffer, or you need to
+# control the buffer's static allocation.
+byob = []
 
 # Teensy 4-specific developer dependencies
 #

@@ -13,6 +13,9 @@
 //!   - a logging configuration
 //! 6. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data
 //!
+//! Optionally, you may specify your own DMA buffer. See the [BYOB](#byob) feature to learn about
+//! user-supplied DMA buffers.
+//!
 //! # Use-cases
 //!
 //! - Infrequently Logging smaller messages with minimal delay
@@ -82,6 +85,15 @@
 //! // At this point, you may use log macros to write data.
 //! log::info!("Hello world!");
 //! ```
+//!
+//! # BYOB
+//!
+//! "Bring Your Own Buffer" (BYOB) is an optional, compile-time feature that affects the DMA logging API. If you enable
+//! the `"byob"` feature, you indicate that you will statically allocate a circular DMA buffer, rather than relying on
+//! the default DMA buffer. You may supply the buffer to [`init()`](fn.init.html).
+//!
+//! BYOB is useful if you want to control either the size or placement of the DMA buffer. You're responsible for following the
+//! alignment requirements. See the i.MX RT HAL's DMA documentation for more details on DMA buffers.
 
 mod sink;
 mod writer;
@@ -189,18 +201,52 @@ pub fn poll() {
 /// you've already specified a logger through another interface.
 ///
 /// See the [module-level documentation](index.html#example) for an example.
-pub fn init<T>(tx: T, channel: Channel, config: LoggingConfig) -> Result<(), SetLoggerError>
+///
+/// # 'BYOB' Feature
+///
+/// "Bring Your Own Buffer" (BYOB) is an optional, compile-time feature. See the [module-level documentation](index.html#byob)
+/// for more information.
+///
+/// If `"byob"` is enabled, the `init()` function signature accepts a fourth argument, `buffer`, type `Circular<u8>`:
+///
+/// ```ignore
+/// pub fn init<T>(
+///     tx: T,
+///     channel: Channel,
+///     config: LoggingConfig,
+///     buffer: Circular<u8>, // <---- New!
+/// ) -> Result<(), SetLoggerError>
+/// ```
+///
+/// The implementation will use this buffer for transferring log messages.
+pub fn init<T>(
+    tx: T,
+    channel: Channel,
+    config: LoggingConfig,
+    #[cfg(feature = "byob")] buffer: Circular<u8>,
+) -> Result<(), SetLoggerError>
 where
     T: IntoSink,
 {
-    interrupt::free(|cs| {
+    let buffer = {
+        #[cfg(feature = "byob")]
+        {
+            buffer
+        }
+        #[cfg(not(feature = "byob"))]
+        {
+            Circular::new(&buffer::BUFFER.0).unwrap()
+        }
+    };
+
+    interrupt::free(move |cs| {
         let logger = LOGGER.borrow(cs);
         let mut logger = logger.borrow_mut();
         if logger.is_none() {
             *logger = Some(Logger {
                 inner: Mutex::new(RefCell::new(Inner {
                     sink: tx.into_sink(channel),
-                    buffer: Some(Circular::new(&buffer::BUFFER.0).unwrap()),
+                    buffer: Some(buffer),
                 })),
                 filters: Filters(config.filters),
             })
@@ -214,6 +260,7 @@ where
     })
 }
 
+#[cfg(not(feature = "byob"))]
 mod buffer {
     use imxrt_hal::dma::Buffer;
 

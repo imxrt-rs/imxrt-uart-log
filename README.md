@@ -2,10 +2,10 @@
 
 > :warning: This crate is built using an unreleased [`imxrt-hal`] crate. To track the release progress, see [`imxrt-hal` #59](https://github.com/imxrt-rs/imxrt-rs/issues/59).
 
-Log data over a serial interface. There are two implementations:
+Log data over a serial interface. There are two logging implementations for NXP's i.MX RT's processors:
 
 - a simple, blocking logger. Useful for basic logging throughout the software stack, including interrupt, fault, and panic handlers.
-- a DMA-based, non-blocking interface. Useful for infrequent logging that needs to happen quickly in thread mode.
+- a DMA-based, non-blocking interface. Useful for logging that needs to happen quickly in thread mode. Uses a default buffer, with an option for a user-supplied DMA buffer.
 
 Built on the [`imxrt-hal`] hardware abstraction layer for i.MX RT processors, version 0.3. Compatible with [`log`] version 0.4.
 
