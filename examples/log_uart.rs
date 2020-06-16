@@ -68,7 +68,7 @@ fn main() -> ! {
     uart.set_tx_fifo(core::num::NonZeroU8::new(TX_FIFO_SIZE));
 
     let (tx, _) = uart.split();
-    imxrt_uart_log::init(tx, Default::default()).unwrap();
+    imxrt_uart_log::blocking::init(tx, Default::default()).unwrap();
 
     //
     // GPT2 initialization (for timing how long logging takes)

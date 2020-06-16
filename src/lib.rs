@@ -2,51 +2,15 @@
 //!
 //! The crate provides a [`log`](https://crates.io/crates/log) implementation that
 //! transfers data over UART. It's an extension to the [`imxrt-hal`](https://crates.io/crates/imxrt-hal)
-//! crate. To log data,
+//! crate. The crate provides two logging implementations:
 //!
-//! 1. Configure a UART peripheral with baud rates, parities, inversions, etc.
-//! 2. Call [`init`](fn.init.html) with a [`LoggingConfig`](struct.LoggingConfig.html). If the default
-//!    logging behavior is acceptable, use `Default::default()` to skip logging configuration.
-//! 3. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data
+//! - a simple, [blocking](blocking/index.html) interface. Useful for simple logging, and for safely logging in interrupt, fault, and
+//!   panic handlers.
+//! - a [DMA-based](dma/index.html), non-blocking interface. Useful for infrequent logging that needs to happen quickly. Not usable
+//!   for logging in interrupt, fault, or panic handlers. More complicated to set up than the blocking interface.
 //!
-//! The implementation blocks, buffering data into the UART transfer FIFO, until the final
-//! bytes are enqueued in the FIFO. The implementation logs data **in an interrupt free
-//! critical section**. Interrupts **will not** preempt logging, and logging may reduce
-//! the system's responsiveness. To evaluate some simple performance measurements, see
-//! [Performance](#performance).
-//!
-//! # Example
-//!
-//! ```no_run
-//! use imxrt_hal;
-//! use imxrt_uart_log;
-//!
-//! let mut peripherals = imxrt_hal::Peripherals::take().unwrap();
-//!
-//! let uarts = peripherals.uart.clock(
-//!     &mut peripherals.ccm.handle,
-//!     imxrt_hal::ccm::uart::ClockSelect::OSC,
-//!     imxrt_hal::ccm::uart::PrescalarSelect::DIVIDE_1,
-//! );
-//!
-//! let mut uart = uarts
-//!     .uart2
-//!     .init(
-//!         peripherals.iomuxc.gpio_ad_b1_02.alt2(),
-//!         peripherals.iomuxc.gpio_ad_b1_03.alt2(),
-//!         115_200,
-//!     )
-//!     .unwrap();
-//!
-//! // Consider using a large TX FIFO size
-//! uart.set_tx_fifo(core::num::NonZeroU8::new(4));
-//! // Set other UART configurations...
-//!
-//! let (tx, rx) = uart.split();
-//! imxrt_uart_log::init(tx, Default::default()).unwrap();
-//!
-//! // At this point, you may use log macros to write data.
-//! ```
+//! Each module-level documentation provides examples and recommended use-cases. To see some comparisons between the two,
+//! see [Performance](#performance).
 //!
 //! # i.MX RT Compatibility
 //!
@@ -79,28 +43,26 @@
 //! where `INFO` describes the log level, `log_uart` describes the module, and the remainder
 //! of the message is the serialized content.
 //!
-//! | Logging Invocation                                    | Execution Time (ms) |
-//! | ----------------------------------------------------- | ------------------- |
-//! | `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 3.12                |
-//! | `log::info!("Hello world! 3 + 2 = 5");`               | 3.12                |
-//! | `log::info!("");`                                     | 1.22                |
-//! | `log::info!(/* 100 character string */);`             | 9.88                |
+//! The table notes execution time in microseconds (us). Execution time is the time elapsed between the start and end
+//! of a `log::info!()` execution.
 //!
-//! See this crate's examples to reproduce this test.
+//! | Logging Invocation                                    | Execution Time, Blocking (us) | Execution Time, DMA (us) |
+//! | ----------------------------------------------------- | ----------------------------- | ------------------------ |
+//! | `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 3120                          | 3.16                     |
+//! | `log::info!("Hello world! 3 + 2 = 5");`               | 3120                          | 2.84                     |
+//! | `log::info!("");`                                     | 1220                          | 2.36                     |
+//! | `log::info!(/* 100 character string */);`             | 9880                          | 4.12                     |
+//!
+//! Use this crate's examples to reproduce these measurements.
 
 #![no_std]
 
+pub mod blocking;
 pub mod dma;
 mod filters;
-mod sink;
 
 use filters::Filters;
 pub use filters::ModuleLevel;
-
-use sink::Sink;
-
-use core::cell::RefCell;
-use cortex_m::interrupt::{self, Mutex};
 
 /// Logging configuration
 ///
@@ -137,47 +99,6 @@ impl Default for LoggingConfig {
     }
 }
 
-struct Logger {
-    /// The peripheral
-    uart: Mutex<RefCell<Sink>>,
-    /// A collection of targets that we are expected
-    /// to filter. If this is empty, we allow everything
-    filters: Filters,
-}
-
-impl log::Log for Logger {
-    fn enabled(&self, metadata: &::log::Metadata) -> bool {
-        metadata.level() <= ::log::max_level() // The log level is appropriate
-            && self.filters.is_enabled(metadata) // The target is in the filter list
-    }
-
-    fn log(&self, record: &::log::Record) {
-        if self.enabled(record.metadata()) {
-            interrupt::free(|cs| {
-                let uart = self.uart.borrow(cs);
-                let mut uart = uart.borrow_mut();
-                use core::fmt::Write;
-                write!(
-                    uart,
-                    "[{} {}]: {}\r\n",
-                    record.level(),
-                    record.target(),
-                    record.args()
-                )
-                .expect("write never fails");
-            });
-        }
-    }
-
-    fn flush(&self) {
-        interrupt::free(|cs| {
-            let uart = self.uart.borrow(cs);
-            let mut uart = uart.borrow_mut();
-            uart.flush();
-        })
-    }
-}
-
 /// An error that indicates the logger is already set
 ///
 /// The error could propagate from this crate's [`init()`](fn.init.html) function.
@@ -190,37 +111,4 @@ impl From<::log::SetLoggerError> for SetLoggerError {
     fn from(_: ::log::SetLoggerError) -> SetLoggerError {
         SetLoggerError(())
     }
-}
-
-/// Initialize the logger with a UART's transfer half
-///
-/// `tx` should be an `imxrt_hal::uart::Tx` half, obtained by calling `split()`
-/// on a `UART` peripheral. Returns an error if you've already called `init()`.
-///
-/// See the [module-level documentation](index.html#example) for an example.
-pub fn init<S>(tx: S, config: LoggingConfig) -> Result<(), SetLoggerError>
-where
-    S: Into<Sink>,
-{
-    static LOGGER: Mutex<RefCell<Option<Logger>>> = Mutex::new(RefCell::new(None));
-    interrupt::free(|cs| {
-        let logger = LOGGER.borrow(cs);
-        let mut logger = logger.borrow_mut();
-        if logger.is_none() {
-            *logger = Some(Logger {
-                uart: Mutex::new(RefCell::new(tx.into())),
-                filters: Filters(config.filters),
-            });
-        }
-
-        // Safety: transmute from limited lifetime 'a to 'static lifetime
-        // is OK, since the derived memory has 'static lifetime. The need
-        // for this comes from the `interrupt::free()` and `Mutex::borrow()`
-        // interplay. The two require any references to be tied to the
-        // lifetime of the critical section.
-        let logger: &'static Logger = unsafe { core::mem::transmute(logger.as_ref().unwrap()) };
-        ::log::set_logger(logger)
-            .map(|_| ::log::set_max_level(config.max_level))
-            .map_err(From::from)
-    })
 }
