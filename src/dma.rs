@@ -101,7 +101,7 @@ pub fn on_interrupt() {
     });
 }
 
-pub fn init_async<T>(tx: T, channel: Channel, config: LoggingConfig) -> Result<(), SetLoggerError>
+pub fn init<T>(tx: T, channel: Channel, config: LoggingConfig) -> Result<(), SetLoggerError>
 where
     T: IntoSink,
 {

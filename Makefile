@@ -28,6 +28,14 @@ log_uart: examples
 	@$(OBJDUMP) -t -C $(EXAMPLES)/$@ > $(EXAMPLES)/$@.sym
 	@$(LOADER) $(EXAMPLES)/$@.hex
 
+# Build and flash the log_dma example
+.PHONY: log_dma
+log_dma: examples
+	@$(OBJCOPY) -O ihex -R .eeprom $(EXAMPLES)/$@ $(EXAMPLES)/$@.hex
+	@$(OBJDUMP) -D -C $(EXAMPLES)/$@ > $(EXAMPLES)/$@.lst
+	@$(OBJDUMP) -t -C $(EXAMPLES)/$@ > $(EXAMPLES)/$@.sym
+	@$(LOADER) $(EXAMPLES)/$@.hex
+
 # Run valid crate tests
 .PHONY: test
 test:
