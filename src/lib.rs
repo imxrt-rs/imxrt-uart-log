@@ -90,11 +90,13 @@
 
 #![no_std]
 
+pub mod dma;
 mod filters;
 mod sink;
 
 use filters::Filters;
 pub use filters::ModuleLevel;
+
 use sink::Sink;
 
 use core::cell::RefCell;
