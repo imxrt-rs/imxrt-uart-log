@@ -2,22 +2,21 @@
 
 > :warning: This crate is built upon an unreleased [`imxrt-hal`] crate. To track the release progress, see [`imxrt-hal` #59](https://github.com/imxrt-rs/imxrt-rs/issues/59).
 
-A logging implementation for i.MX RT processors, letting users log data over a serial interface.
+Log data over a serial interface. There are two implementations:
 
-1. Configure an [`imxrt-hal`] UART peripheral
-2. Set the logger with `init()`
-3. Use the macros from the [`log`] crate to write data
+- a simple, blocking logger. Useful for basic logging throughout the software stack, including interrupt, fault, and panic handlers.
+- a DMA-based, non-blocking interface. Useful for infrequent logging that needs to happen quickly in thread mode.
 
 Built on the [`imxrt-hal`] hardware abstraction layer for i.MX RT processors, version 0.3. Compatible with [`log`] version 0.4.
 
 [`imxrt-hal`]: https://crates.io/crates/imxrt-hal
 [`log`]: https://crates.io/crates/log
 
-## Use-cases
+See the documentation for recommended use-cases, implementation descriptions, and examples:
 
-- Simply debugging applications and libraries
-- `panic!()` handlers, and printing panic messages
-- Unambiguously detecting interrupts and faults
+```
+cargo doc --open
+```
 
 ## i.MX RT Compatibility
 
@@ -25,20 +24,16 @@ This crate supports all of the same i.MX RT variants as the [`imxrt-hal`] crate.
 
 > :information_source: As of this writing, the HAL only supports one i.MX RT variant, the `"imxrt1062"`. For convenience, the `"imxrt1062"` feature is this crate's **default** feature. This default feature may change in future releases.
 
-## Implementation
-
-The implementation blocks, buffering data into the UART transfer FIFO, until the final bytes are enqueued in the FIFO. The implementation logs data **in an interrupt free critical section**. Interrupts **will not** preempt logging. Logging may reduce the system's responsiveness.
-
 ## Performance
 
-The table below describes the execution time for logging statements on a Teensy 4. For more information on the test setup, consult the crate documentation, or see the [`log_uart.rs` example](examples/log_uart.rs).
+The table below describes the execution time for logging statements on a Teensy 4. For more information on the test setup, consult the crate documentation. See the two examples to reproduce the test.
 
-| Logging Invocation                                    | Execution Time (ms) |
-| ----------------------------------------------------- | ------------------- |
-| `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 3.12                |
-| `log::info!("Hello world! 3 + 2 = 5");`               | 3.12                |
-| `log::info!("");`                                     | 1.22                |
-| `log::info!(/* 100 character string */);`             | 9.88                |
+| Logging Invocation                                    | Execution Time, Blocking (us) | Execution Time, DMA (us) |
+| ----------------------------------------------------- | ----------------------------- | ------------------------ |
+| `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 3120                          | 3.16                     |
+| `log::info!("Hello world! 3 + 2 = 5");`               | 3120                          | 2.84                     |
+| `log::info!("");`                                     | 1220                          | 2.36                     |
+| `log::info!(/* 100 character string */);`             | 9880                          | 4.12                     |
 
 ## Testing
 
