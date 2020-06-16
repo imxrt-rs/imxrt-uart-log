@@ -21,9 +21,15 @@ jobs:
             target: thumbv7em-none-eabihf
             override: true
       - uses: actions-rs/clippy-check@v1
+        name: Run clippy with no optional features
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --verbose --lib --examples --target thumbv7em-none-eabihf -- -D warnings
+      - uses: actions-rs/clippy-check@v1
+        name: Run clippy with the 'byob' feature
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --verbose --lib --examples --target thumbv7em-none-eabihf --features byob -- -D warnings
 
   format:
     runs-on: ubuntu-latest
