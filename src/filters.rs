@@ -1,25 +1,27 @@
 //! Logging filters
 
-/// A pairing of a module name (`&'static str`) to a log level
+/// Filter log messages by module name (`&'static str`) to a log level
 ///
-/// - if the level is `None`, log at all levels from the message
+/// - if the level is `None`, log at all levels from the module
 /// - if the level is not `None`, that will be the base log level for the module
 ///
 /// # Example
 ///
 /// ```
-/// use imxrt_uart_log::ModuleLevel;
+/// use imxrt_uart_log::Filter;
 /// use log::LevelFilter;
 ///
-/// static LEVELS: &'static [ModuleLevel] = &[
-///     ("uart", None),
+/// static LEVELS: &'static [Filter] = &[
+///     // Writes messages from the 'i2c' module subject to the max log level
+///     ("i2c", None),
+///     // Writes only Error- and Warn-level messages from the 'spi' module
 ///     ("spi", Some(LevelFilter::Warn)),
 /// ];
 /// ```
-pub type ModuleLevel = (&'static str, Option<::log::LevelFilter>);
+pub type Filter = (&'static str, Option<::log::LevelFilter>);
 
 /// Filters for enabling logs
-pub struct Filters(pub &'static [ModuleLevel]);
+pub struct Filters(pub &'static [Filter]);
 
 impl Filters {
     /// Returns `true` if, based on this metadata, logging should be enabled

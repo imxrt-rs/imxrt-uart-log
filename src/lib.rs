@@ -61,8 +61,8 @@ pub mod blocking;
 pub mod dma;
 mod filters;
 
+pub use filters::Filter;
 use filters::Filters;
-pub use filters::ModuleLevel;
 
 /// Logging configuration
 ///
@@ -72,8 +72,25 @@ pub use filters::ModuleLevel;
 /// section for more information. We also enable logging for all targets.
 /// Set the `filters` collection to specify log targets of interest.
 ///
-/// If the default configuration is good for you, use `Default::default()` with
-/// [`init`](fn.init.html).
+/// If the default configuration is good for you, use `Default::default()`.
+///
+/// ```
+/// use imxrt_uart_log::{Filter, LoggingConfig};
+///
+/// const I2C_LOGGING: Filter = ("i2c", None);
+/// const SPI_LOGGING: Filter = ("spi", Some(log::LevelFilter::Warn));
+/// const MOTOR_LOGGING: Filter = ("motor", Some(log::LevelFilter::Trace));
+///
+/// let config = LoggingConfig {
+///     // To use the statically-specified max log level, use log::STATIC_MAX_LEVEL
+///     max_level: log::LevelFilter::Debug,
+///     filters: &[
+///         I2C_LOGGING,
+///         SPI_LOGGING,
+///         MOTOR_LOGGING,
+///     ]
+/// };
+/// ```
 pub struct LoggingConfig {
     /// The max log level for *all* logging
     ///
@@ -85,9 +102,9 @@ pub struct LoggingConfig {
     ///
     /// If set to an empty slice (default), the logger performs no
     /// filtering. Otherwise, we filter the specified targets by
-    /// the accompanying log level. If there is no level, we allow
-    /// all levels.
-    pub filters: &'static [ModuleLevel],
+    /// the accompanying log level. See [`Filter`](type.Filter.html) for
+    /// more information.
+    pub filters: &'static [Filter],
 }
 
 impl Default for LoggingConfig {
