@@ -20,17 +20,9 @@ endif
 examples:
 	@RUSTFLAGS=$(RUSTFLAGS) cargo build --examples --target $(TARGET) --release
 
-# Build and flash the log_uart example
-.PHONY: log_uart
-log_uart: examples
-	@$(OBJCOPY) -O ihex -R .eeprom $(EXAMPLES)/$@ $(EXAMPLES)/$@.hex
-	@$(OBJDUMP) -D -C $(EXAMPLES)/$@ > $(EXAMPLES)/$@.lst
-	@$(OBJDUMP) -t -C $(EXAMPLES)/$@ > $(EXAMPLES)/$@.sym
-	@$(LOADER) $(EXAMPLES)/$@.hex
-
-# Build and flash the log_dma example
-.PHONY: log_dma
-log_dma: examples
+# Build and flash a Teensy 4 example
+.PHONY: t4_%
+t4_%: examples
 	@$(OBJCOPY) -O ihex -R .eeprom $(EXAMPLES)/$@ $(EXAMPLES)/$@.hex
 	@$(OBJDUMP) -D -C $(EXAMPLES)/$@ > $(EXAMPLES)/$@.lst
 	@$(OBJDUMP) -t -C $(EXAMPLES)/$@ > $(EXAMPLES)/$@.sym

@@ -1,6 +1,6 @@
 # imxrt-uart-log
 
-> :warning: This crate is built upon an unreleased [`imxrt-hal`] crate. To track the release progress, see [`imxrt-hal` #59](https://github.com/imxrt-rs/imxrt-rs/issues/59).
+> :warning: This crate is built using an unreleased [`imxrt-hal`] crate. To track the release progress, see [`imxrt-hal` #59](https://github.com/imxrt-rs/imxrt-rs/issues/59).
 
 Log data over a serial interface. There are two implementations:
 
@@ -44,7 +44,7 @@ For examples that run on a Teensy 4, you'll need the build dependencies describe
 Use `make` to build an example:
 
 ```
-make log_uart
+make t4_blocking
 ```
 
 When building an example for the Teensy 4, the build will print the location of the `*.hex` file. You may download the file to a Teensy using either the [Teensy Loader Application](https://www.pjrc.com/teensy/loader.html) or the [`teensy_loader_cli`](https://github.com/PaulStoffregen/teensy_loader_cli) command-line Teensy loader.
