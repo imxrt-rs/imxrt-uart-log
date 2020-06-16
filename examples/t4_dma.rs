@@ -28,7 +28,7 @@ const DELAY_OCR: gpt::OutputCompareRegister = gpt::OutputCompareRegister::Two;
 
 #[interrupt]
 fn DMA7_DMA23() {
-    imxrt_uart_log::dma::on_interrupt()
+    imxrt_uart_log::dma::poll()
 }
 
 #[entry]

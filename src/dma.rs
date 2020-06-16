@@ -4,8 +4,8 @@
 //!
 //! 1. Configure a UART peripheral with baud rates, parities, inversions, etc.
 //! 2. Select a DMA channel. Take note of the DMA channel number.
-//! 3. Implement the DMA channel's interrupt handler, and call [`on_interrupt()`](fn.on_interrupt.html)
-//!    in the implementation.
+//! 3. Implement the DMA channel's interrupt handler, and call [`poll()`](fn.poll.html)
+//!    in the implementation. Or, prepare an event loop that calls `poll()` repeatedly.
 //! 4. Unmask the interrupt via an `unsafe` call to `cortex_m::interrupt::unmask()`.
 //! 5. Call [`init`](fn.init.html) with all of
 //!   - a UART transfer half,
@@ -32,9 +32,6 @@
 //! the buffer before the next transfer is scheduled, the data that cannot be copied into the buffer
 //! **will be dropped.** Either keep messages small, or keep messages infrequent, to avoid circular buffer saturation.
 //!
-//! If the interrupt is masked, logging will not happen. If you do not service the interrupt by calling `on_interrupt()`, logging
-//! will not happen. `on_interrupt()` will `panic!()` if it is called in thread mode (anywhere that's *not* an interrupt handler).
-//!
 //! # Example
 //!
 //! In this example, we select DMA channel 7 to use for logging transfers. We implement the `DMA7_DMA23` interrupt to
@@ -44,12 +41,9 @@
 //! ```no_run
 //! use imxrt_hal::ral::interrupt;
 //!
-//! // The interrupt macro (below) should be provided from your runtime crate.
-//! // We ignore it here for testing the example...
-//! //
-//! // #[interrupt]
+//! // Assume that DMA7_DMA23 is registered in the vector table
 //! fn DMA7_DMA23() {
-//!     imxrt_uart_log::dma::on_interrupt();
+//!     imxrt_uart_log::dma::poll();
 //! }
 //!
 //! let mut peripherals = imxrt_hal::Peripherals::take().unwrap();
@@ -160,14 +154,12 @@ impl ::log::Log for Logger {
 
 /// Drives DMA-based logging over serial
 ///
-/// Users *must* call this from a DMA interrupt! Otherwise, serial logging will do nothing.
-///
-/// # Panics
-///
-/// If a user calls `on_interrupt()` from anywhere that's *not* an interrupt, `on_interrupt()` panics.
+/// You *must* call this repeatedly to drive the DMA-based logging. We recommend that
+/// you enable the interrupt for a DMA channel, and call `poll()` in
+/// the interrupt handler. Or, you may call this repeatedly in an event loop.
+/// If the transfer is not complete, `poll()` does nothing.
 #[inline]
-pub fn on_interrupt() {
-    // TODO panic checks
+pub fn poll() {
     interrupt::free(|cs| {
         let logger = LOGGER.borrow(cs);
         let mut logger = logger.borrow_mut();
