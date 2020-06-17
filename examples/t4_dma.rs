@@ -31,6 +31,18 @@ fn DMA7_DMA23() {
     imxrt_uart_log::dma::poll()
 }
 
+/// See the "BYOB" documentation for more details
+#[cfg(feature = "byob")]
+mod buffer {
+    use imxrt_hal::dma::Buffer;
+    pub use imxrt_hal::dma::Circular;
+
+    // Using a 512-byte buffer, rather than the 2KiB default buffer
+    #[repr(align(512))]
+    pub struct Alignment(pub Buffer<[u8; 512]>);
+    pub static BUFFER: Alignment = Alignment(Buffer::new([0; 512]));
+}
+
 #[entry]
 fn main() -> ! {
     let mut peripherals = imxrt_hal::Peripherals::take().unwrap();
@@ -68,7 +80,16 @@ fn main() -> ! {
         .unwrap();
 
     let (tx, _) = uart.split();
-    imxrt_uart_log::dma::init(tx, channel, Default::default()).unwrap();
+    imxrt_uart_log::dma::init(
+        tx,
+        channel,
+        Default::default(),
+        #[cfg(feature = "byob")]
+        {
+            buffer::Circular::new(&buffer::BUFFER.0).unwrap()
+        },
+    )
+    .unwrap();
 
     //
     // GPT2 initialization (for timing how long logging takes)
