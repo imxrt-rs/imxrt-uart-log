@@ -16,8 +16,7 @@ log = "0.4.8"
 cortex-m = "0.6.2"
 
 [dependencies.imxrt-hal]
-git = "https://github.com/mciantyre/imxrt-rs"
-branch = "proto/uart-log-release"
+version = "0.3.0"
 
 [features]
 # TODO add features for other variants once available in the HAL.
@@ -40,7 +39,7 @@ byob = []
 [target.thumbv7em-none-eabihf.dev-dependencies]
 teensy4-rt  = { git = "https://github.com/mciantyre/teensy4-rs.git", branch = "development" }
 teensy4-fcb = { git = "https://github.com/mciantyre/teensy4-rs.git", branch = "development" }
-imxrt-hal   = { git = "https://github.com/mciantyre/imxrt-rs", branch = "proto/uart-log-release", features = ["imxrt1062", "rt"] }
+imxrt-hal   = { version = "0.3.0", features = ["imxrt1062", "rt"] }
 
 [dev-dependencies]
 panic-halt = "0.2.0"
