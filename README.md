@@ -1,5 +1,15 @@
 # imxrt-uart-log
 
+[![Crates.io][crates-io-badge]][crates-io-url]
+[![Build][build-badge]][build-url]
+
+[crates-io-badge]: https://img.shields.io/crates/v/imxrt-uart-log
+[crates-io-url]: https://crates.io/crates/imxrt-uart-log
+[build-badge]: https://github.com/imxrt-rs/imxrt-uart-log/workflows/All%20Checks/badge.svg
+[build-url]: https://github.com/imxrt-rs/imxrt-uart-log/actions?query=workflow%3A%22All+Checks%22
+
+#### [API Docs](https://docs.rs/imxrt-uart-log/latest/imxrt_uart_log/)
+
 Log data over a serial interface. There are two logging implementations for NXP's i.MX RT processors:
 
 - a simple, blocking logger. Useful for basic logging throughout the software stack, including interrupt, fault, and panic handlers.
