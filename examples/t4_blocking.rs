@@ -13,6 +13,8 @@ extern crate panic_halt;
 #[cfg(target_arch = "arm")]
 extern crate teensy4_fcb;
 
+mod demo;
+
 use core::time::Duration;
 use imxrt_hal::gpt;
 use imxrt_hal::ral::interrupt;
@@ -27,9 +29,6 @@ static mut TIMER: Option<gpt::GPT> = None;
 /// GPT output compare register selection
 const INTERRUPT_OCR: gpt::OutputCompareRegister = gpt::OutputCompareRegister::Three;
 const INTERRUPT_PERIOD: Duration = Duration::from_millis(850);
-
-/// Output compare register that we'll use for delays
-const DELAY_OCR: gpt::OutputCompareRegister = gpt::OutputCompareRegister::Two;
 
 #[interrupt]
 unsafe fn GPT1() {
@@ -102,39 +101,5 @@ fn main() -> ! {
         cortex_m::peripheral::NVIC::unmask(interrupt::GPT1);
     }
 
-    let delay = |gpt: &mut gpt::GPT| {
-        use embedded_hal::timer::CountDown;
-        let mut cd = gpt.count_down(DELAY_OCR);
-        cd.start(Duration::from_millis(1_000));
-        while cd.wait().is_err() {
-            core::sync::atomic::spin_loop_hint();
-        }
-    };
-
-    loop {
-        let (_, duration) = gpt2.time(|| {
-            log::info!("Hello world! 3 + 2 = {}", 3 + 2);
-        });
-        log::info!("Logging that took {:?}", duration);
-        delay(&mut gpt2);
-
-        let (_, duration) = gpt2.time(|| {
-            log::info!("Hello world! 3 + 2 = 5");
-        });
-        log::info!("Logging that took {:?}", duration);
-        delay(&mut gpt2);
-
-        let (_, duration) = gpt2.time(|| {
-            log::info!("");
-        });
-        log::info!("Logging that took {:?}", duration);
-        delay(&mut gpt2);
-
-        let (_, duration) = gpt2.time(|| {
-            // 100 characters
-            log::info!("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
-        });
-        log::info!("Logging that took {:?}", duration);
-        delay(&mut gpt2);
-    }
+    demo::log_loop(gpt2);
 }
