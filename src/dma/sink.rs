@@ -46,6 +46,19 @@ impl Sink {
         }
     }
 
+    pub fn is_transfer_complete(&self) -> bool {
+        match self {
+            Sink::_1(periph) => periph.is_transfer_complete(),
+            Sink::_2(periph) => periph.is_transfer_complete(),
+            Sink::_3(periph) => periph.is_transfer_complete(),
+            Sink::_4(periph) => periph.is_transfer_complete(),
+            Sink::_5(periph) => periph.is_transfer_complete(),
+            Sink::_6(periph) => periph.is_transfer_complete(),
+            Sink::_7(periph) => periph.is_transfer_complete(),
+            Sink::_8(periph) => periph.is_transfer_complete(),
+        }
+    }
+
     pub fn transfer_complete(&mut self) -> Option<Circular<u8>> {
         match self {
             Sink::_1(periph) => periph.transfer_complete(),

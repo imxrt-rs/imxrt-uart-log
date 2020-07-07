@@ -198,6 +198,9 @@ pub fn poll() {
 
         if logger.sink.is_transfer_interrupt() {
             logger.sink.transfer_clear_interrupt();
+        }
+
+        if logger.sink.is_transfer_complete() {
             let buffer = logger.sink.transfer_complete().unwrap();
             if !buffer.is_empty() {
                 // There's pending data to send

@@ -16,26 +16,27 @@ fn delay(gpt: &mut GPT) {
     }
 }
 
-/// Drop into an infinite loop that prints example messages over
-/// serial.
-pub fn log_loop(mut gpt: GPT) -> ! {
+fn log_loop_impl<F: Fn()>(mut gpt: GPT, func: F) -> ! {
     loop {
         let (_, duration) = gpt.time(|| {
             log::info!("Hello world! 3 + 2 = {}", 3 + 2);
         });
         log::info!("Logging that took {:?}", duration);
+        func();
         delay(&mut gpt);
 
         let (_, duration) = gpt.time(|| {
             log::info!("Hello world! 3 + 2 = 5");
         });
         log::info!("Logging that took {:?}", duration);
+        func();
         delay(&mut gpt);
 
         let (_, duration) = gpt.time(|| {
             log::info!("");
         });
         log::info!("Logging that took {:?}", duration);
+        func();
         delay(&mut gpt);
 
         let (_, duration) = gpt.time(|| {
@@ -43,6 +44,21 @@ pub fn log_loop(mut gpt: GPT) -> ! {
             log::info!("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
         });
         log::info!("Logging that took {:?}", duration);
+        func();
         delay(&mut gpt);
     }
+}
+
+/// Drop into an infinite loop that prints messages over serial.
+#[allow(unused)]
+pub fn log_loop(gpt: GPT) -> ! {
+    log_loop_impl(gpt, || {})
+}
+
+/// Drop into an infinite loop that prints messages over serial.
+///
+/// Before each delay, we call `imxrt_uart_log::dma::poll()`.
+#[allow(unused)]
+pub fn log_loop_poll(gpt: GPT) -> ! {
+    log_loop_impl(gpt, imxrt_uart_log::dma::poll)
 }
