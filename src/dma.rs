@@ -72,7 +72,8 @@
 //! );
 //!
 //! let mut dma_channels = peripherals.dma.clock(&mut peripherals.ccm.handle);
-//! let channel = dma_channels[7].take().unwrap();
+//! let mut channel = dma_channels[7].take().unwrap();
+//! channel.set_interrupt_on_completion(true);
 //!
 //! let uarts = peripherals.uart.clock(
 //!     &mut peripherals.ccm.handle,

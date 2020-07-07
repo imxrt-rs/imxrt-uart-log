@@ -1,7 +1,7 @@
 //! DMA sink
 
 use imxrt_hal::{
-    dma::{Channel, Circular, Config, ConfigBuilder, Peripheral, WriteHalf},
+    dma::{Channel, Circular, Peripheral, WriteHalf},
     uart::{module, Tx},
 };
 
@@ -106,54 +106,50 @@ pub trait IntoSink {
     fn into_sink(self, channel: Channel) -> Sink;
 }
 
-fn config() -> Config {
-    ConfigBuilder::new().interrupt_on_completion(true).build()
-}
-
 impl IntoSink for Tx<module::_1> {
     fn into_sink(self, channel: Channel) -> Sink {
-        Sink::_1(Peripheral::new_transfer(self, channel, config()))
+        Sink::_1(Peripheral::new_transfer(self, channel))
     }
 }
 
 impl IntoSink for Tx<module::_2> {
     fn into_sink(self, channel: Channel) -> Sink {
-        Sink::_2(Peripheral::new_transfer(self, channel, config()))
+        Sink::_2(Peripheral::new_transfer(self, channel))
     }
 }
 
 impl IntoSink for Tx<module::_3> {
     fn into_sink(self, channel: Channel) -> Sink {
-        Sink::_3(Peripheral::new_transfer(self, channel, config()))
+        Sink::_3(Peripheral::new_transfer(self, channel))
     }
 }
 
 impl IntoSink for Tx<module::_4> {
     fn into_sink(self, channel: Channel) -> Sink {
-        Sink::_4(Peripheral::new_transfer(self, channel, config()))
+        Sink::_4(Peripheral::new_transfer(self, channel))
     }
 }
 
 impl IntoSink for Tx<module::_5> {
     fn into_sink(self, channel: Channel) -> Sink {
-        Sink::_5(Peripheral::new_transfer(self, channel, config()))
+        Sink::_5(Peripheral::new_transfer(self, channel))
     }
 }
 
 impl IntoSink for Tx<module::_6> {
     fn into_sink(self, channel: Channel) -> Sink {
-        Sink::_6(Peripheral::new_transfer(self, channel, config()))
+        Sink::_6(Peripheral::new_transfer(self, channel))
     }
 }
 
 impl IntoSink for Tx<module::_7> {
     fn into_sink(self, channel: Channel) -> Sink {
-        Sink::_7(Peripheral::new_transfer(self, channel, config()))
+        Sink::_7(Peripheral::new_transfer(self, channel))
     }
 }
 
 impl IntoSink for Tx<module::_8> {
     fn into_sink(self, channel: Channel) -> Sink {
-        Sink::_8(Peripheral::new_transfer(self, channel, config()))
+        Sink::_8(Peripheral::new_transfer(self, channel))
     }
 }
