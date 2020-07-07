@@ -6,10 +6,10 @@
 //!
 //! - a simple, [blocking](blocking/index.html) interface. Useful for simple logging, and for safely logging in interrupt, fault, and
 //!   panic handlers.
-//! - a [DMA-based](dma/index.html), non-blocking interface. Useful for infrequent logging that needs to happen quickly. Not usable
-//!   for logging in interrupt, fault, or panic handlers. More complicated to set up than the blocking interface.
+//! - a [DMA-based](dma/index.html), non-blocking interface. Useful for logging that needs to happen quickly, but does
+//!   not need to be responsive. More complicated to set up than the blocking interface.
 //!
-//! Each module-level documentation provides examples and recommended use-cases. To see some comparisons between the two,
+//! The module-level documentation provides examples and recommended use-cases. To see some comparisons between the two,
 //! see [Performance](#performance).
 //!
 //! # i.MX RT Compatibility
@@ -24,7 +24,7 @@
 //! # Performance
 //!
 //! We measured logging execution on a Teensy 4, with a 600MHz ARM clock. We configured
-//! a UART peripheral following the example above. Using a general purpose timer (GPT),
+//! a UART peripheral following the examples in each module. Using a general purpose timer (GPT),
 //! we measured the time required to write various log messages. We verified GPT timings
 //! with a logic analyzer, which observed a pulse on a GPIO.
 //!

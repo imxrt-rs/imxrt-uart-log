@@ -5,7 +5,7 @@
 //! 1. Configure a UART peripheral with baud rates, parities, inversions, etc.
 //! 2. Select a DMA channel. Take note of the DMA channel number.
 //! 3. Implement the DMA channel's interrupt handler, and call [`poll()`](fn.poll.html)
-//!    in the implementation. Or, prepare an event loop that calls `poll()` repeatedly.
+//!    in the implementation.
 //! 4. Unmask the interrupt via an `unsafe` call to `cortex_m::interrupt::unmask()`.
 //! 5. Call [`init`](fn.init.html) with all of
 //!   - a UART transfer half,
@@ -13,13 +13,17 @@
 //!   - a logging configuration
 //! 6. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data
 //!
+//! You cannot use [`poll()`](fn.poll.html) in an event loop. The implementation assumes that you have
+//! overridden your DMA channel's interrupt handler. If `poll()` is not called in your DMA channel's
+//! interrupt handler, the logger will not work.
+//!
 //! Optionally, you may specify your own DMA buffer. See the [BYOB](#byob) feature to learn about
 //! user-supplied DMA buffers.
 //!
 //! # Use-cases
 //!
-//! - Infrequently Logging smaller messages with minimal delay
-//! - Logging only in thread mode (no guaranteed interrupt of fault handler logging)
+//! - Infrequently logging smaller messages with minimal delay
+//! - Logging where the responsiveness of the logging implementation isn't critical
 //!
 //! # Implementation
 //!
@@ -34,6 +38,16 @@
 //! By default, the implementation relies on a 2KiB statically-allocated circular buffer. If you saturate
 //! the buffer before the next transfer is scheduled, the data that cannot be copied into the buffer
 //! **will be dropped.** Either keep messages small, or keep messages infrequent, to avoid circular buffer saturation.
+//!
+//! The implementation assumes that you have provided the DMA channel's interrupt handler. The DMA channel's interrupt
+//! handler will be called when each DMA transfer completes, even if you have not registered your DMA channel's interrupt
+//! handler.
+//!
+//! # Tips
+//!
+//! To improve logging responsiveness, consider changing your DMA channel's interrupt priority. This may be helpful
+//! when frequently logging from interrupts. If your DMA channel's interrupt priority is greater than your other interrupt
+//! priorities, `poll()` is more likely to be called, which will mean more data sent over serial.
 //!
 //! # Example
 //!
@@ -166,9 +180,10 @@ impl ::log::Log for Logger {
 
 /// Drives DMA-based logging over serial
 ///
-/// You *must* call this repeatedly to drive the DMA-based logging. We recommend that
-/// you enable the interrupt for a DMA channel, and call `poll()` in
-/// the interrupt handler. Or, you may call this repeatedly in an event loop.
+/// You *must* call this repeatedly to drive the DMA-based logging. You must
+/// enable the interrupt for a DMA channel, and call `poll()` in the interrupt
+/// handler.
+///
 /// If the transfer is not complete, `poll()` does nothing.
 #[inline]
 pub fn poll() {
