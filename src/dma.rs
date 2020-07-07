@@ -5,17 +5,13 @@
 //! 1. Configure a UART peripheral with baud rates, parities, inversions, etc.
 //! 2. Select a DMA channel. Take note of the DMA channel number.
 //! 3. Implement the DMA channel's interrupt handler, and call [`poll()`](fn.poll.html)
-//!    in the implementation.
+//!    in the implementation. Or, call `poll()` throughout your event loop.
 //! 4. Unmask the interrupt via an `unsafe` call to `cortex_m::interrupt::unmask()`.
 //! 5. Call [`init`](fn.init.html) with all of
 //!   - a UART transfer half,
 //!   - a DMA channel
 //!   - a logging configuration
 //! 6. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data
-//!
-//! You cannot use [`poll()`](fn.poll.html) in an event loop. The implementation assumes that you have
-//! overridden your DMA channel's interrupt handler. If `poll()` is not called in your DMA channel's
-//! interrupt handler, the logger will not work.
 //!
 //! Optionally, you may specify your own DMA buffer. See the [BYOB](#byob) feature to learn about
 //! user-supplied DMA buffers.
@@ -38,10 +34,6 @@
 //! By default, the implementation relies on a 2KiB statically-allocated circular buffer. If you saturate
 //! the buffer before the next transfer is scheduled, the data that cannot be copied into the buffer
 //! **will be dropped.** Either keep messages small, or keep messages infrequent, to avoid circular buffer saturation.
-//!
-//! The implementation assumes that you have provided the DMA channel's interrupt handler. The DMA channel's interrupt
-//! handler will be called when each DMA transfer completes, even if you have not registered your DMA channel's interrupt
-//! handler.
 //!
 //! # Tips
 //!
@@ -195,9 +187,8 @@ impl ::log::Log for Logger {
 
 /// Drives DMA-based logging over serial
 ///
-/// You *must* call this repeatedly to drive the DMA-based logging. You must
-/// enable the interrupt for a DMA channel, and call `poll()` in the interrupt
-/// handler.
+/// You *must* call this repeatedly to drive the DMA-based logging. Calling `poll()`
+/// can happen in the DMA channel's interrupt handler, or throughout an event loop.
 ///
 /// If the transfer is not complete, `poll()` does nothing.
 #[inline]
