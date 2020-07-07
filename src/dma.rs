@@ -28,9 +28,16 @@
 //! The caller incurs the time it takes to perform any string interpolation and a copy into
 //! a circular buffer. Both string interpolation and copying occur in a critical section. Then,
 //!
-//! - if there is no active DMA transfer, the logger schedules a DMA transfer, and returns.
-//! - if there is an active DMA transfer, the logger returns immediately. When the active DMA transfer completes,
-//!   any content written to the buffer during the transfer will be transferred.
+//! 1. if there is no active DMA transfer, the logger schedules a DMA transfer, and returns.
+//! 2. if there is a completed DMA transfer, the logger finalizes the transfer. The logger appends the new log message
+//!    to the enqueued contents in the circular buffer. The logger schedules a DMA transfer, and returns.
+//! 3. if there is an active DMA transfer, the logger enqueues the new message in the circular buffer, and returns immediately.
+//!
+//! The implementation schedules new transfers when the current transfer is complete, there are log messages in the circular
+//! buff, and you either
+//!
+//! - call [`poll()`](fn.poll.html), or
+//! - log another message (see 2. above)
 //!
 //! By default, the implementation relies on a 2KiB statically-allocated circular buffer. If you saturate
 //! the buffer before the next transfer is scheduled, the data that cannot be copied into the buffer
@@ -38,9 +45,13 @@
 //!
 //! # Tips
 //!
+//! ## Interrupt priorities
+//!
 //! To improve logging responsiveness, consider changing your DMA channel's interrupt priority. This may be helpful
 //! when frequently logging from interrupts. If your DMA channel's interrupt priority is greater than your other interrupt
 //! priorities, `poll()` is more likely to be called, which will mean more data sent over serial.
+//!
+//! ## Flush the async logger
 //!
 //! To guarantee that a transfer completes, use [`poll()`](fn.poll.html) while waiting for an [`Idle`](struct.Poll.html) return:
 //!
@@ -53,6 +64,25 @@
 //!
 //! Note that this will flush *all* contents from the async logger, so you will also be waiting for any previously-scheduled
 //! transfers to complete.
+//!
+//! ## Responsiveness
+//!
+//! If you do not care about logging responsiveness, or if you're OK with "bursty" logging, you do not need to call [`poll()`](fn.poll.html). The
+//! logging implementation will finalize and schedule transfers when it detects that a previous transfer is complete. For example,
+//!
+//! ```no_run
+//! log::info!("what's");   // Immediately schedules DMA transfer
+//! log::info!("the");      // Enqueues message, but not transferred
+//! // Some time later, when "what's" transfer completes...
+//! log::info!("weather?"); // Sends both "the" and "weather?"
+//! ```
+//!
+//! will immediately log `"what's"`. The second message `"the"` is written to the circular buffer, and it will be scheduled to transfer
+//! when you write `"weather?"`.
+//!
+//! If the time between `"the"` and `"weather?"` is large, and you'd like to receive `"the"` before `"weather"` is written, add one or
+//! or more `poll()` calls in between the two calls. The most responsive async logger will call `poll()` in the DMA channel's interrupt
+//! handler, which may be called as soon as a transfer completes.
 //!
 //! # Example
 //!
@@ -228,10 +258,11 @@ pub enum Poll {
     Idle,
 }
 
-/// Drives DMA-based logging over serial
+/// Drives DMA-based logging
 ///
-/// You *must* call this repeatedly to drive the DMA-based logging. Calling `poll()`
-/// can happen in the DMA channel's interrupt handler, or throughout an event loop.
+/// You may call this repeatedly to drive the DMA-based logging. Calling `poll()`
+/// can happen in the DMA channel's interrupt handler, or throughout an event loop. `poll()`
+/// runs in a critical section.
 ///
 /// If the transfer is not complete, `poll()` does nothing.
 #[inline]
