@@ -161,6 +161,20 @@ impl ::log::Log for Logger {
                     .expect("never fails");
                     // Start the transfer
                     logger.sink.start_transfer(buffer);
+                } else if logger.sink.is_transfer_complete() {
+                    // Transfer is complete. We need to complete the transfer,
+                    // and re-schedule it here.
+                    let mut buffer = logger.sink.transfer_complete().unwrap();
+                    write!(
+                        Writer::Circular(&mut buffer),
+                        "[{} {}]: {}\r\n",
+                        record.level(),
+                        record.target(),
+                        record.args()
+                    )
+                    .expect("never fails");
+                    // Start the transfer
+                    logger.sink.start_transfer(buffer);
                 } else {
                     // There's an active transfer; find the buffer in the peripheral,
                     // and fill it with data

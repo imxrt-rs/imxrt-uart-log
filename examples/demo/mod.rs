@@ -22,21 +22,18 @@ fn log_loop_impl<F: Fn()>(mut gpt: GPT, func: F) -> ! {
             log::info!("Hello world! 3 + 2 = {}", 3 + 2);
         });
         log::info!("Logging that took {:?}", duration);
-        func();
         delay(&mut gpt);
 
         let (_, duration) = gpt.time(|| {
             log::info!("Hello world! 3 + 2 = 5");
         });
         log::info!("Logging that took {:?}", duration);
-        func();
         delay(&mut gpt);
 
         let (_, duration) = gpt.time(|| {
             log::info!("");
         });
         log::info!("Logging that took {:?}", duration);
-        func();
         delay(&mut gpt);
 
         let (_, duration) = gpt.time(|| {
@@ -44,8 +41,9 @@ fn log_loop_impl<F: Fn()>(mut gpt: GPT, func: F) -> ! {
             log::info!("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
         });
         log::info!("Logging that took {:?}", duration);
-        func();
         delay(&mut gpt);
+
+        func();
     }
 }
 
