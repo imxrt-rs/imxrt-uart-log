@@ -7,7 +7,7 @@ use imxrt_hal::gpt::{OutputCompareRegister, GPT};
 const DELAY_OCR: OutputCompareRegister = OutputCompareRegister::Two;
 
 /// Blocking delay implemented on the GPT timer
-fn delay(gpt: &mut GPT) {
+pub fn delay(gpt: &mut GPT) {
     use embedded_hal::timer::CountDown;
     let mut cd = gpt.count_down(DELAY_OCR);
     cd.start(Duration::from_millis(1_000));
@@ -16,8 +16,13 @@ fn delay(gpt: &mut GPT) {
     }
 }
 
-fn log_loop_impl<F: Fn()>(mut gpt: GPT, func: F) -> ! {
+/// Drop into the common loop that logs data
+///
+/// `func()` is an operation that will run at the beginning of each
+/// loop.
+pub fn log_loop<F: Fn(&mut GPT)>(mut gpt: GPT, func: F) -> ! {
     loop {
+        func(&mut gpt);
         let (_, duration) = gpt.time(|| {
             log::info!("Hello world! 3 + 2 = {}", 3 + 2);
         });
@@ -42,21 +47,5 @@ fn log_loop_impl<F: Fn()>(mut gpt: GPT, func: F) -> ! {
         });
         log::info!("Logging that took {:?}", duration);
         delay(&mut gpt);
-
-        func();
     }
-}
-
-/// Drop into an infinite loop that prints messages over serial.
-#[allow(unused)]
-pub fn log_loop(gpt: GPT) -> ! {
-    log_loop_impl(gpt, || {})
-}
-
-/// Drop into an infinite loop that prints messages over serial.
-///
-/// Before each delay, we call `imxrt_uart_log::dma::poll()`.
-#[allow(unused)]
-pub fn log_loop_poll(gpt: GPT) -> ! {
-    log_loop_impl(gpt, imxrt_uart_log::dma::poll)
 }

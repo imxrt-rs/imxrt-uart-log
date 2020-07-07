@@ -124,5 +124,16 @@ fn main() -> ! {
         cortex_m::peripheral::NVIC::unmask(interrupt::GPT1);
     }
 
-    demo::log_loop_poll(gpt2);
+    demo::log_loop(gpt2, |mut gpt| {
+        imxrt_uart_log::dma::poll();
+        let duration = cortex_m::interrupt::free(|_| {
+            let (_, duration) = gpt.time(|| {
+                log::error!("I want to guarantee that this is transferred!");
+                while imxrt_uart_log::dma::Poll::Idle != imxrt_uart_log::dma::poll() {}
+            });
+            duration
+        });
+        log::error!("Flushing the async logger took {:?}", duration);
+        demo::delay(&mut gpt);
+    });
 }

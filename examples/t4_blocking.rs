@@ -101,5 +101,5 @@ fn main() -> ! {
         cortex_m::peripheral::NVIC::unmask(interrupt::GPT1);
     }
 
-    demo::log_loop(gpt2);
+    demo::log_loop(gpt2, |_| {});
 }

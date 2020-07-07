@@ -39,7 +39,7 @@ unsafe fn GPT1() {
 
 #[interrupt]
 fn DMA7_DMA23() {
-    imxrt_uart_log::dma::poll()
+    imxrt_uart_log::dma::poll();
 }
 
 /// See the "BYOB" documentation for more details
@@ -133,5 +133,5 @@ fn main() -> ! {
         cortex_m::peripheral::NVIC::unmask(interrupt::GPT1);
     }
 
-    demo::log_loop(gpt2);
+    demo::log_loop(gpt2, |_| {});
 }
