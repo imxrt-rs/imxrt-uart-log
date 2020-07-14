@@ -1,6 +1,7 @@
 //! Logging sink
 
 use core::fmt;
+use imxrt_hal::iomuxc;
 use imxrt_hal::uart;
 
 use embedded_hal::blocking::serial::Write;
@@ -8,7 +9,7 @@ use embedded_hal::blocking::serial::Write;
 // The implementation has a few `expects()` that assume no errors
 // from the UART write operations. This statically asserts that the
 // assumptions hold (at least for UART1...).
-type _Error = <uart::UART<uart::module::_1> as Write<u8>>::Error;
+type _Error = <uart::UART<iomuxc::consts::U1> as Write<u8>>::Error;
 trait _IsInfallible {
     const VALUE: bool = false;
 }
@@ -19,14 +20,14 @@ const _UART_ERROR_INFALLIBLE: [u8; 1] = [0; <_Error as _IsInfallible>::VALUE as 
 
 /// A logging sink which dispatches to any of the eight possible UART peripherals
 pub enum Sink {
-    _1(uart::Tx<uart::module::_1>),
-    _2(uart::Tx<uart::module::_2>),
-    _3(uart::Tx<uart::module::_3>),
-    _4(uart::Tx<uart::module::_4>),
-    _5(uart::Tx<uart::module::_5>),
-    _6(uart::Tx<uart::module::_6>),
-    _7(uart::Tx<uart::module::_7>),
-    _8(uart::Tx<uart::module::_8>),
+    _1(uart::Tx<iomuxc::consts::U1>),
+    _2(uart::Tx<iomuxc::consts::U2>),
+    _3(uart::Tx<iomuxc::consts::U3>),
+    _4(uart::Tx<iomuxc::consts::U4>),
+    _5(uart::Tx<iomuxc::consts::U5>),
+    _6(uart::Tx<iomuxc::consts::U6>),
+    _7(uart::Tx<iomuxc::consts::U7>),
+    _8(uart::Tx<iomuxc::consts::U8>),
 }
 
 impl fmt::Write for Sink {
@@ -60,50 +61,50 @@ impl Sink {
     }
 }
 
-impl From<uart::Tx<uart::module::_1>> for Sink {
-    fn from(tx: uart::Tx<uart::module::_1>) -> Self {
+impl From<uart::Tx<iomuxc::consts::U1>> for Sink {
+    fn from(tx: uart::Tx<iomuxc::consts::U1>) -> Self {
         Sink::_1(tx)
     }
 }
 
-impl From<uart::Tx<uart::module::_2>> for Sink {
-    fn from(tx: uart::Tx<uart::module::_2>) -> Self {
+impl From<uart::Tx<iomuxc::consts::U2>> for Sink {
+    fn from(tx: uart::Tx<iomuxc::consts::U2>) -> Self {
         Sink::_2(tx)
     }
 }
 
-impl From<uart::Tx<uart::module::_3>> for Sink {
-    fn from(tx: uart::Tx<uart::module::_3>) -> Self {
+impl From<uart::Tx<iomuxc::consts::U3>> for Sink {
+    fn from(tx: uart::Tx<iomuxc::consts::U3>) -> Self {
         Sink::_3(tx)
     }
 }
 
-impl From<uart::Tx<uart::module::_4>> for Sink {
-    fn from(tx: uart::Tx<uart::module::_4>) -> Self {
+impl From<uart::Tx<iomuxc::consts::U4>> for Sink {
+    fn from(tx: uart::Tx<iomuxc::consts::U4>) -> Self {
         Sink::_4(tx)
     }
 }
 
-impl From<uart::Tx<uart::module::_5>> for Sink {
-    fn from(tx: uart::Tx<uart::module::_5>) -> Self {
+impl From<uart::Tx<iomuxc::consts::U5>> for Sink {
+    fn from(tx: uart::Tx<iomuxc::consts::U5>) -> Self {
         Sink::_5(tx)
     }
 }
 
-impl From<uart::Tx<uart::module::_6>> for Sink {
-    fn from(tx: uart::Tx<uart::module::_6>) -> Self {
+impl From<uart::Tx<iomuxc::consts::U6>> for Sink {
+    fn from(tx: uart::Tx<iomuxc::consts::U6>) -> Self {
         Sink::_6(tx)
     }
 }
 
-impl From<uart::Tx<uart::module::_7>> for Sink {
-    fn from(tx: uart::Tx<uart::module::_7>) -> Self {
+impl From<uart::Tx<iomuxc::consts::U7>> for Sink {
+    fn from(tx: uart::Tx<iomuxc::consts::U7>) -> Self {
         Sink::_7(tx)
     }
 }
 
-impl From<uart::Tx<uart::module::_8>> for Sink {
-    fn from(tx: uart::Tx<uart::module::_8>) -> Self {
+impl From<uart::Tx<iomuxc::consts::U8>> for Sink {
+    fn from(tx: uart::Tx<iomuxc::consts::U8>) -> Self {
         Sink::_8(tx)
     }
 }

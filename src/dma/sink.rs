@@ -2,21 +2,22 @@
 
 use imxrt_hal::{
     dma::{Channel, Circular, Peripheral, WriteHalf},
-    uart::{module, Tx},
+    iomuxc,
+    uart::Tx,
 };
 
 /// DMA output
 type Output<M> = Peripheral<Tx<M>, u8, Circular<u8>>;
 
 pub enum Sink {
-    _1(Output<module::_1>),
-    _2(Output<module::_2>),
-    _3(Output<module::_3>),
-    _4(Output<module::_4>),
-    _5(Output<module::_5>),
-    _6(Output<module::_6>),
-    _7(Output<module::_7>),
-    _8(Output<module::_8>),
+    _1(Output<iomuxc::consts::U1>),
+    _2(Output<iomuxc::consts::U2>),
+    _3(Output<iomuxc::consts::U3>),
+    _4(Output<iomuxc::consts::U4>),
+    _5(Output<iomuxc::consts::U5>),
+    _6(Output<iomuxc::consts::U6>),
+    _7(Output<iomuxc::consts::U7>),
+    _8(Output<iomuxc::consts::U8>),
 }
 
 impl Sink {
@@ -119,49 +120,49 @@ pub trait IntoSink {
     fn into_sink(self, channel: Channel) -> Sink;
 }
 
-impl IntoSink for Tx<module::_1> {
+impl IntoSink for Tx<iomuxc::consts::U1> {
     fn into_sink(self, channel: Channel) -> Sink {
         Sink::_1(Peripheral::new_transfer(self, channel))
     }
 }
 
-impl IntoSink for Tx<module::_2> {
+impl IntoSink for Tx<iomuxc::consts::U2> {
     fn into_sink(self, channel: Channel) -> Sink {
         Sink::_2(Peripheral::new_transfer(self, channel))
     }
 }
 
-impl IntoSink for Tx<module::_3> {
+impl IntoSink for Tx<iomuxc::consts::U3> {
     fn into_sink(self, channel: Channel) -> Sink {
         Sink::_3(Peripheral::new_transfer(self, channel))
     }
 }
 
-impl IntoSink for Tx<module::_4> {
+impl IntoSink for Tx<iomuxc::consts::U4> {
     fn into_sink(self, channel: Channel) -> Sink {
         Sink::_4(Peripheral::new_transfer(self, channel))
     }
 }
 
-impl IntoSink for Tx<module::_5> {
+impl IntoSink for Tx<iomuxc::consts::U5> {
     fn into_sink(self, channel: Channel) -> Sink {
         Sink::_5(Peripheral::new_transfer(self, channel))
     }
 }
 
-impl IntoSink for Tx<module::_6> {
+impl IntoSink for Tx<iomuxc::consts::U6> {
     fn into_sink(self, channel: Channel) -> Sink {
         Sink::_6(Peripheral::new_transfer(self, channel))
     }
 }
 
-impl IntoSink for Tx<module::_7> {
+impl IntoSink for Tx<iomuxc::consts::U7> {
     fn into_sink(self, channel: Channel) -> Sink {
         Sink::_7(Peripheral::new_transfer(self, channel))
     }
 }
 
-impl IntoSink for Tx<module::_8> {
+impl IntoSink for Tx<iomuxc::consts::U8> {
     fn into_sink(self, channel: Channel) -> Sink {
         Sink::_8(Peripheral::new_transfer(self, channel))
     }

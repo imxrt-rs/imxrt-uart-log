@@ -69,11 +69,7 @@ fn main() -> ! {
     );
     let uart = uarts
         .uart2
-        .init(
-            iomuxc.gpio_ad_b1_02.alt2(),
-            iomuxc.gpio_ad_b1_03.alt2(),
-            BAUD,
-        )
+        .init(iomuxc.ad_b1.p02, iomuxc.ad_b1.p03, BAUD)
         .unwrap();
 
     let (tx, _) = uart.split();
