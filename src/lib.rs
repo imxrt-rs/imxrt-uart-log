@@ -82,7 +82,6 @@ use filters::Filters;
 /// const MOTOR_LOGGING: Filter = ("motor", Some(log::LevelFilter::Trace));
 ///
 /// let config = LoggingConfig {
-///     // To use the statically-specified max log level, use log::STATIC_MAX_LEVEL
 ///     max_level: log::LevelFilter::Debug,
 ///     filters: &[
 ///         I2C_LOGGING,
@@ -118,7 +117,7 @@ impl Default for LoggingConfig {
 
 /// An error that indicates the logger is already set
 ///
-/// The error could propagate from this crate's [`init()`](fn.init.html) function.
+/// The error could propagate from one of the `init()` functions.
 /// Or, it could propagate if the underlying logger was set through another logging
 /// interface.
 #[derive(Debug)]
