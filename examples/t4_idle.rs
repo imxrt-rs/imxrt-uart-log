@@ -79,17 +79,17 @@ fn main() -> ! {
             dcdc,
             gpt1,
             gpt2,
+            dwt: cortex_m::Peripherals::take().unwrap().DWT,
         },
         |mut gpt| {
             imxrt_uart_log::dma::poll();
-            let duration = cortex_m::interrupt::free(|_| {
-                let (_, duration) = gpt.time(|| {
+            let cycle_count = cortex_m::interrupt::free(|_| {
+                demo::cycles(|| {
                     log::error!("I want to guarantee that this is transferred!");
                     while imxrt_uart_log::dma::Poll::Idle != imxrt_uart_log::dma::poll() {}
-                });
-                duration
+                })
             });
-            log::error!("Flushing the async logger took {:?}", duration);
+            log::error!("Flushing the async logger took {} cycles", cycle_count);
             demo::delay(&mut gpt);
         },
     );

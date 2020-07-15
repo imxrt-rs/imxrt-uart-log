@@ -1,6 +1,7 @@
 //! Demo code that's shared in each example
 
 use core::time::Duration;
+use cortex_m::peripheral::DWT;
 use imxrt_hal::gpt;
 use imxrt_hal::gpt::{OutputCompareRegister, GPT};
 use imxrt_hal::ral::interrupt;
@@ -40,6 +41,16 @@ pub struct Setup {
     pub dcdc: imxrt_hal::dcdc::DCDC,
     pub gpt1: imxrt_hal::gpt::Unclocked,
     pub gpt2: imxrt_hal::gpt::Unclocked,
+    pub dwt: DWT,
+}
+
+/// Count the clock cycles required to execute `f`
+#[inline(always)]
+pub fn cycles<F: FnOnce()>(f: F) -> u32 {
+    let start = DWT::get_cycle_count();
+    f();
+    let end = DWT::get_cycle_count();
+    end - start
 }
 
 /// Drop into the common loop that logs data
@@ -47,6 +58,9 @@ pub struct Setup {
 /// `func()` is an operation that will run at the beginning of each
 /// loop.
 pub fn log_loop<F: Fn(&mut GPT)>(mut setup: Setup, func: F) -> ! {
+    DWT::unlock();
+    setup.dwt.enable_cycle_counter();
+
     let (_, ipg_hz) = setup.ccm.pll1.set_arm_clock(
         imxrt_hal::ccm::PLL1::ARM_HZ,
         &mut setup.ccm.handle,
@@ -85,29 +99,29 @@ pub fn log_loop<F: Fn(&mut GPT)>(mut setup: Setup, func: F) -> ! {
 
     loop {
         func(&mut gpt2);
-        let (_, duration) = gpt2.time(|| {
+        let count = cycles(|| {
             log::info!("Hello world! 3 + 2 = {}", 3 + 2);
         });
-        log::info!("Logging that took {:?}", duration);
+        log::info!("Logging that took {} cycles", count);
         delay(&mut gpt2);
 
-        let (_, duration) = gpt2.time(|| {
+        let count = cycles(|| {
             log::info!("Hello world! 3 + 2 = 5");
         });
-        log::info!("Logging that took {:?}", duration);
+        log::info!("Logging that took {} cycles", count);
         delay(&mut gpt2);
 
-        let (_, duration) = gpt2.time(|| {
+        let count = cycles(|| {
             log::info!("");
         });
-        log::info!("Logging that took {:?}", duration);
+        log::info!("Logging that took {} cycles", count);
         delay(&mut gpt2);
 
-        let (_, duration) = gpt2.time(|| {
+        let count = cycles(|| {
             // 100 characters
             log::info!("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
         });
-        log::info!("Logging that took {:?}", duration);
+        log::info!("Logging that took {} cycles", count);
         delay(&mut gpt2);
     }
 }

@@ -90,6 +90,7 @@ fn main() -> ! {
             dcdc,
             gpt1,
             gpt2,
+            dwt: cortex_m::Peripherals::take().unwrap().DWT,
         },
         |_| {},
     );
