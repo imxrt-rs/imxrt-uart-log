@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added
+
+- Support for using `dma::poll()` in an event loop.
+- Return values from `dma::poll()`, allowing users to block until the logger
+  is idle. See the documentation for usage tips.
+- Documentation describing usage patterns for the async logger.
+- Support DMA transfer rescheduling on loging calls. See the documentation for
+  when this might be appropriate.
+
+### Fixes
+
+- Note that `dma::poll()` will panic if there is no logger.
+
+### Changes
+
+- Requires `imxrt-hal` version 0.4, which introduces breaking changes.
+  See the [`imxrt-hal` release notes](https://github.com/imxrt-rs/imxrt-rs/releases)
+  for more information.
+- Measure logger performance in clock cycles, rather than elapsed time.
+
 ## [0.1.1] - 2020-07-07
 
 ### Fixes
