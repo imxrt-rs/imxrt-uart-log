@@ -42,8 +42,8 @@
 //! let mut uart = uarts
 //!     .uart2
 //!     .init(
-//!         peripherals.iomuxc.gpio_ad_b1_02.alt2(),
-//!         peripherals.iomuxc.gpio_ad_b1_03.alt2(),
+//!         peripherals.iomuxc.ad_b1.p02,
+//!         peripherals.iomuxc.ad_b1.p03,
 //!         115_200,
 //!     )
 //!     .unwrap();

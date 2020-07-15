@@ -2,7 +2,7 @@
 
 /// Filter log messages by module name (`&'static str`) to a log level
 ///
-/// - if the level is `None`, log at all levels from the module
+/// - if the level is `None`, log at all levels from the module (subject to the max log level)
 /// - if the level is not `None`, that will be the base log level for the module
 ///
 /// # Example

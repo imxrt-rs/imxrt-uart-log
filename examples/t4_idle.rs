@@ -1,8 +1,8 @@
 //! DMA-based serial logging - Teensy 4 example
 //!
-//! This use the same setup as the `t4_uart.rs` example. Connect
-//! a serial receive to pin 14, and you should receive log messages
-//! and timing measurements.
+//! Unlike the t4_dma example, this example shows that you can manually
+//! add `poll()` points into your code, rather than putting `poll()` in
+//! DMA interrupt, to drive serial logging.
 
 #![no_std]
 #![no_main]
@@ -13,16 +13,9 @@ extern crate teensy4_fcb;
 
 mod demo;
 
-use imxrt_hal::ral::interrupt;
 use teensy4_rt::entry;
-use teensy4_rt::interrupt;
 
 const BAUD: u32 = 115_200;
-
-#[interrupt]
-fn DMA7_DMA23() {
-    imxrt_uart_log::dma::poll();
-}
 
 /// See the "BYOB" documentation for more details
 #[cfg(feature = "byob")]
@@ -53,11 +46,7 @@ fn main() -> ! {
     // DMA initialization
     //
     let mut dma_channels = dma.clock(&mut ccm.handle);
-    let mut channel = dma_channels[7].take().unwrap();
-    channel.set_interrupt_on_completion(true);
-    unsafe {
-        cortex_m::peripheral::NVIC::unmask(interrupt::DMA7_DMA23);
-    }
+    let channel = dma_channels[7].take().unwrap();
 
     //
     // UART initialization
@@ -92,6 +81,16 @@ fn main() -> ! {
             gpt2,
             dwt: cortex_m::Peripherals::take().unwrap().DWT,
         },
-        |_| {},
+        |mut gpt| {
+            imxrt_uart_log::dma::poll();
+            let cycle_count = cortex_m::interrupt::free(|_| {
+                demo::cycles(|| {
+                    log::error!("I want to guarantee that this is transferred!");
+                    while imxrt_uart_log::dma::Poll::Idle != imxrt_uart_log::dma::poll() {}
+                })
+            });
+            log::error!("Flushing the async logger took {} cycles", cycle_count);
+            demo::delay(&mut gpt);
+        },
     );
 }

@@ -23,10 +23,8 @@
 //!
 //! # Performance
 //!
-//! We measured logging execution on a Teensy 4, with a 600MHz ARM clock. We configured
-//! a UART peripheral following the examples in each module. Using a general purpose timer (GPT),
-//! we measured the time required to write various log messages. We verified GPT timings
-//! with a logic analyzer, which observed a pulse on a GPIO.
+//! We measured logging execution on a Teensy 4. We configured a UART peripheral following the examples in each module.
+//! We measured the CPU clock cycles required to execute each logging statement.
 //!
 //! By default, a logging call resembling
 //!
@@ -43,15 +41,14 @@
 //! where `INFO` describes the log level, `log_uart` describes the module, and the remainder
 //! of the message is the serialized content.
 //!
-//! The table notes execution time in microseconds (us). Execution time is the time elapsed between the start and end
-//! of a `log::info!()` execution.
+//! CPU clock cycles measure the elapse of cycle counts before and after a `log::info!()` macro.
 //!
-//! | Logging Invocation                                    | Execution Time, Blocking (us) | Execution Time, DMA (us) |
-//! | ----------------------------------------------------- | ----------------------------- | ------------------------ |
-//! | `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 3120                          | 3.16                     |
-//! | `log::info!("Hello world! 3 + 2 = 5");`               | 3120                          | 2.84                     |
-//! | `log::info!("");`                                     | 1220                          | 2.36                     |
-//! | `log::info!(/* 100 character string */);`             | 9880                          | 4.12                     |
+//! | Logging Invocation                                    | CPU Clock Cycles, Blocking | CPU Clock Cycles, DMA |
+//! | ----------------------------------------------------- | -------------------------- | --------------------- |
+//! | `log::info!("Hello world! 3 + 2 = {}", 3 + 2);`       | 2341330                    | 1871                  |
+//! | `log::info!("Hello world! 3 + 2 = 5");`               | 2341273                    | 1683                  |
+//! | `log::info!("");`                                     | 1197246                    | 1428                  |
+//! | `log::info!(/* 100 character string */);`             | 6397302                    | 2463                  |
 //!
 //! Use this crate's examples to reproduce these measurements.
 
@@ -82,7 +79,6 @@ use filters::Filters;
 /// const MOTOR_LOGGING: Filter = ("motor", Some(log::LevelFilter::Trace));
 ///
 /// let config = LoggingConfig {
-///     // To use the statically-specified max log level, use log::STATIC_MAX_LEVEL
 ///     max_level: log::LevelFilter::Debug,
 ///     filters: &[
 ///         I2C_LOGGING,
@@ -118,7 +114,7 @@ impl Default for LoggingConfig {
 
 /// An error that indicates the logger is already set
 ///
-/// The error could propagate from this crate's [`init()`](fn.init.html) function.
+/// The error could propagate from one of the `init()` functions.
 /// Or, it could propagate if the underlying logger was set through another logging
 /// interface.
 #[derive(Debug)]

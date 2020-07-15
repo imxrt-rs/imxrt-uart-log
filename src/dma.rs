@@ -4,18 +4,16 @@
 //!
 //! 1. Configure a UART peripheral with baud rates, parities, inversions, etc.
 //! 2. Select a DMA channel. Take note of the DMA channel number.
-//! 3. Implement the DMA channel's interrupt handler, and call [`poll()`](fn.poll.html)
-//!    in the implementation.
-//! 4. Unmask the interrupt via an `unsafe` call to `cortex_m::interrupt::unmask()`.
-//! 5. Call [`init`](fn.init.html) with all of
+//! 3. Call [`poll()`](fn.poll.html) in either your DMA channel's interrupt handler, or throughout
+//!    your event loop.
+//!   - If you're calling `poll()` in a DMA channel's interrupt handler, unmask the interrupt
+//!    via an `unsafe` call to `cortex_m::interrupt::unmask()`, and also enable interrupt on
+//!    completion.
+//! 4. Call [`init`](fn.init.html) with all of
 //!   - a UART transfer half,
 //!   - a DMA channel
 //!   - a logging configuration
-//! 6. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data
-//!
-//! You cannot use [`poll()`](fn.poll.html) in an event loop. The implementation assumes that you have
-//! overridden your DMA channel's interrupt handler. If `poll()` is not called in your DMA channel's
-//! interrupt handler, the logger will not work.
+//! 5. Use the macros from the [`log`](https://crates.io/crates/log) crate to write data.
 //!
 //! Optionally, you may specify your own DMA buffer. See the [BYOB](#byob) feature to learn about
 //! user-supplied DMA buffers.
@@ -23,37 +21,75 @@
 //! # Use-cases
 //!
 //! - Infrequently logging smaller messages with minimal delay
-//! - Logging where the responsiveness of the logging implementation isn't critical
+//! - Logging where the responsiveness of the logging implementation may not be critical
 //!
 //! # Implementation
 //!
 //! The implementation minimizes the time it takes to call and return from a `log` macro.
 //! The caller incurs the time it takes to perform any string interpolation and a copy into
-//! a circular buffer. Both string interpolation and copying occur in a critical section. Then,
+//! a circular buffer. Both string interpolation and copying happen in a critical section. Then,
 //!
-//! - if there is no active DMA transfer, the logger schedules a DMA transfer, and returns.
-//! - if there is an active DMA transfer, the logger returns immediately. When the active DMA transfer completes,
-//!   any content written to the buffer during the transfer will be transferred.
+//! 1. if there is no active DMA transfer, the logger schedules a DMA transfer, and returns.
+//! 2. if there is a completed DMA transfer, the logger finalizes the transfer. The logger appends the new log message
+//!    to the enqueued contents in the circular buffer. The logger schedules a DMA transfer, and returns.
+//! 3. if there is an active DMA transfer, the logger enqueues the new message in the circular buffer, and returns immediately.
+//!
+//! The implementation schedules new transfers when the current transfer is complete, there are log messages in the circular
+//! buff, and you either
+//!
+//! - call [`poll()`](fn.poll.html), or
+//! - log another message (see 2. above)
 //!
 //! By default, the implementation relies on a 2KiB statically-allocated circular buffer. If you saturate
 //! the buffer before the next transfer is scheduled, the data that cannot be copied into the buffer
 //! **will be dropped.** Either keep messages small, or keep messages infrequent, to avoid circular buffer saturation.
 //!
-//! The implementation assumes that you have provided the DMA channel's interrupt handler. The DMA channel's interrupt
-//! handler will be called when each DMA transfer completes, even if you have not registered your DMA channel's interrupt
-//! handler.
-//!
 //! # Tips
+//!
+//! ## Interrupt priorities
 //!
 //! To improve logging responsiveness, consider changing your DMA channel's interrupt priority. This may be helpful
 //! when frequently logging from interrupts. If your DMA channel's interrupt priority is greater than your other interrupt
 //! priorities, `poll()` is more likely to be called, which will mean more data sent over serial.
 //!
+//! ## Flush the async logger
+//!
+//! To guarantee that a transfer completes, use [`poll()`](fn.poll.html) while waiting for an [`Idle`](struct.Poll.html) return:
+//!
+//! ```no_run
+//! use imxrt_uart_log::dma::{poll, Poll};
+//!
+//! log::error!("Send message and wait for the transfer to finish");
+//! while Poll::Idle != poll() {}
+//! ```
+//!
+//! Note that this will flush *all* contents from the async logger, so you will also wait for any previously-scheduled
+//! transfers to complete.
+//!
+//! ## Responsiveness
+//!
+//! If you do not care about logging responsiveness, or if you're OK with "bursty" logging, you do not need to call [`poll()`](fn.poll.html). The
+//! logging implementation will finalize and schedule transfers when it detects that a previous transfer is complete. For example,
+//!
+//! ```no_run
+//! log::info!("what's");   // Immediately schedules DMA transfer
+//! log::info!("the");      // Enqueues message, but not transferred
+//! // Some time later, when "what's" transfer completes...
+//! log::info!("weather?"); // Sends both "the" and "weather?"
+//! ```
+//!
+//! will immediately log `"what's"`. The second message `"the"` is written to the circular buffer, and it will be scheduled to transfer
+//! when you write `"weather?"`.
+//!
+//! If the time between `"the"` and `"weather?"` is large, and you'd like to receive `"the"` before `"weather"` is written, add one or
+//! or more `poll()` calls in between the two calls. The most responsive async logger will call `poll()` in the DMA channel's interrupt
+//! handler, which will run as soon as a transfer completes.
+//!
 //! # Example
 //!
 //! In this example, we select DMA channel 7 to use for logging transfers. We implement the `DMA7_DMA23` interrupt to
 //! service DMA transfers. We need to `unmask` the `DMA7_DMA23` interrupt for proper operation. See the comments for
-//! more information
+//! more information.
 //!
 //! ```no_run
 //! use imxrt_hal::ral::interrupt;
@@ -72,7 +108,13 @@
 //! );
 //!
 //! let mut dma_channels = peripherals.dma.clock(&mut peripherals.ccm.handle);
-//! let channel = dma_channels[7].take().unwrap();
+//! let mut channel = dma_channels[7].take().unwrap();
+//! // Enable interrupt generation when the DMA transfer completes
+//! channel.set_interrupt_on_completion(true);
+//! // Don't forget to unmask the interrupt!
+//! unsafe {
+//!     cortex_m::peripheral::NVIC::unmask(interrupt::DMA7_DMA23);
+//! }
 //!
 //! let uarts = peripherals.uart.clock(
 //!     &mut peripherals.ccm.handle,
@@ -82,19 +124,14 @@
 //! let uart = uarts
 //!     .uart2
 //!     .init(
-//!         peripherals.iomuxc.gpio_ad_b1_02.alt2(),
-//!         peripherals.iomuxc.gpio_ad_b1_03.alt2(),
+//!         peripherals.iomuxc.ad_b1.p02,
+//!         peripherals.iomuxc.ad_b1.p03,
 //!         115_200,
 //!     )
 //!     .unwrap();
 //!
 //! let (tx, _) = uart.split();
 //! imxrt_uart_log::dma::init(tx, channel, Default::default()).unwrap();
-//!
-//! // Don't forget to unmask the interrupt!
-//! unsafe {
-//!     cortex_m::peripheral::NVIC::unmask(interrupt::DMA7_DMA23);
-//! }
 //!
 //! // At this point, you may use log macros to write data.
 //! log::info!("Hello world!");
@@ -121,6 +158,8 @@ use imxrt_hal::dma::{Channel, Circular};
 
 struct Inner {
     sink: Sink,
+    /// The buffer transitions into the DMA peripheral when there is an active
+    /// transfer. If this is `Some(..)`, we're idle.
     buffer: Option<Circular<u8>>,
 }
 
@@ -160,6 +199,19 @@ impl ::log::Log for Logger {
                     .expect("never fails");
                     // Start the transfer
                     logger.sink.start_transfer(buffer);
+                } else if logger.sink.is_transfer_complete() {
+                    // Transfer is complete. We need to finalize the transfer,
+                    // and re-schedule it here.
+                    let mut buffer = logger.sink.transfer_complete().unwrap();
+                    write!(
+                        Writer::Circular(&mut buffer),
+                        "[{} {}]: {}\r\n",
+                        record.level(),
+                        record.target(),
+                        record.args()
+                    )
+                    .expect("never fails");
+                    logger.sink.start_transfer(buffer);
                 } else {
                     // There's an active transfer; find the buffer in the peripheral,
                     // and fill it with data
@@ -178,25 +230,61 @@ impl ::log::Log for Logger {
     }
 }
 
-/// Drives DMA-based logging over serial
+/// A [`poll()`](fn.poll.html)ing result
 ///
-/// You *must* call this repeatedly to drive the DMA-based logging. You must
-/// enable the interrupt for a DMA channel, and call `poll()` in the interrupt
-/// handler.
+/// `Poll` provides insight into the DMA logger's state
+#[derive(Debug, PartialEq, Eq)]
+pub enum Poll {
+    /// There is an active transfer
+    ///
+    /// The next log message will be scheduled after the active transfer
+    /// completes. The transfer will start on either the next call to
+    /// [`poll()`](fn.poll.html), or along with the next written log message.
+    ///
+    /// An `Active` return could mean that
+    ///
+    /// - `poll()` was called while there was an active transfer, and nothing
+    ///   happened.
+    /// - `poll()` was called, and an active transfer is now complete. `poll()` scheduled
+    ///   another transfer after detecting data in the circular buffer.
+    Active,
+    /// There is no active transfer, and the logger is idle
+    ///
+    /// The next log message will be scheduled immediately. An `Idle` result could
+    /// mean that
+    ///
+    /// - `poll()` was called when there was no active transfer.
+    /// - `poll()` was called, and an active transfer is now complete. There was no other
+    ///   log message in the circular buffer, so there's nothing to do.
+    Idle,
+}
+
+/// Drives DMA-based logging
+///
+/// You may call this repeatedly to drive the DMA-based logging. Calling `poll()`
+/// can happen in the DMA channel's interrupt handler, or throughout an event loop. `poll()`
+/// runs in a critical section.
 ///
 /// If the transfer is not complete, `poll()` does nothing.
+///
+/// # Panics
+///
+/// If you failed to register a logger using [`init()`](fn.init.html), `poll()` panics.
 #[inline]
-pub fn poll() {
+pub fn poll() -> Poll {
     interrupt::free(|cs| {
         let logger = LOGGER.borrow(cs);
         let mut logger = logger.borrow_mut();
-        let logger = logger.as_mut().unwrap();
+        let logger = logger.as_mut().expect("User has registered a logger");
 
         let logger = logger.inner.borrow(cs);
         let mut logger = logger.borrow_mut();
 
         if logger.sink.is_transfer_interrupt() {
             logger.sink.transfer_clear_interrupt();
+        }
+
+        if logger.sink.is_transfer_complete() {
             let buffer = logger.sink.transfer_complete().unwrap();
             if !buffer.is_empty() {
                 // There's pending data to send
@@ -206,7 +294,12 @@ pub fn poll() {
                 logger.buffer = Some(buffer);
             }
         }
-    });
+
+        match &logger.buffer {
+            Some(_) => Poll::Idle,
+            None => Poll::Active,
+        }
+    })
 }
 
 /// Initialize the DMA-based logger with a UART transfer half and a DMA channel
@@ -222,7 +315,7 @@ pub fn poll() {
 /// "Bring Your Own Buffer" (BYOB) is an optional, compile-time feature. See the [module-level documentation](index.html#byob)
 /// for more information.
 ///
-/// If `"byob"` is enabled, the `init()` function signature accepts a fourth argument, `buffer`, type `Circular<u8>`:
+/// If `"byob"` is enabled, the `init()` function signature accepts a fourth argument bound to `buffer`, type `Circular<u8>`:
 ///
 /// ```ignore
 /// pub fn init<T>(
