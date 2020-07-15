@@ -13,9 +13,9 @@
 Log data over a serial interface. There are two logging implementations for NXP's i.MX RT processors:
 
 - a simple, blocking logger. Useful for basic logging throughout the software stack, including interrupt, fault, and panic handlers.
-- a DMA-based, non-blocking interface. Useful for logging that needs to happen quickly in thread mode. Uses a default buffer, with an option for a user-supplied DMA buffer.
+- a DMA-based, non-blocking interface. Useful for logging that needs to happen quickly. Uses a default buffer, with an option for a user-supplied DMA buffer.
 
-Built on the [`imxrt-hal`] hardware abstraction layer for i.MX RT processors, version 0.3. Compatible with [`log`] version 0.4.
+Built on the [`imxrt-hal`] hardware abstraction layer for i.MX RT processors, version 0.4. Compatible with [`log`] version 0.4.
 
 [`imxrt-hal`]: https://crates.io/crates/imxrt-hal
 [`log`]: https://crates.io/crates/log
@@ -32,7 +32,7 @@ The crate's examples run on hardware. See the documentation at the top of each e
 
 For examples that run on a Teensy 4, you'll need the build dependencies described in the [`teensy4-rs` project](https://github.com/mciantyre/teensy4-rs#dependencies).
 
-Use `make` to build an example:
+Use `make` to build an example for the Teensy 4:
 
 ```
 make t4_blocking
