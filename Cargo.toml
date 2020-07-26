@@ -18,7 +18,6 @@ cortex-m = "0.6.3"
 [dependencies.imxrt-hal]
 version = "0.3.0"
 git = "https://github.com/imxrt-rs/imxrt-rs.git"
-rev = "1815db6"
 
 [features]
 # TODO add features for other variants once available in the HAL.
@@ -46,7 +45,6 @@ teensy4-fcb = { git = "https://github.com/mciantyre/teensy4-rs.git" }
 version = "0.3.0"
 features = ["imxrt1062", "rt"]
 git = "https://github.com/imxrt-rs/imxrt-rs.git"
-rev = "1815db6"
 
 [dev-dependencies]
 panic-halt = "0.2.0"
