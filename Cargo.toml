@@ -11,9 +11,9 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/imxrt-rs/imxrt-uart-log"
 
 [dependencies]
-embedded-hal = "0.2.3"
-log = "0.4.8"
-cortex-m = "0.6.2"
+embedded-hal = "0.2.4"
+log = "0.4.11"
+cortex-m = "0.6.3"
 
 [dependencies.imxrt-hal]
 version = "0.3.0"
