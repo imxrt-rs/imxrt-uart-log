@@ -1,6 +1,6 @@
 [package]
 name = "imxrt-uart-log"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Ian McIntyre <ianpmcintyre@gmail.com>"]
 edition = "2018"
 description = "Logging over an i.MX RT serial interface"
@@ -16,7 +16,7 @@ log = "0.4.11"
 cortex-m = "0.6.3"
 
 [dependencies.imxrt-hal]
-version = "0.3.0"
+version = "0.4.0"
 git = "https://github.com/imxrt-rs/imxrt-rs.git"
 
 [features]
@@ -42,7 +42,7 @@ teensy4-rt  = { git = "https://github.com/mciantyre/teensy4-rs.git" }
 teensy4-fcb = { git = "https://github.com/mciantyre/teensy4-rs.git" }
 
 [target.thumbv7em-none-eabihf.dev-dependencies.imxrt-hal]
-version = "0.3.0"
+version = "0.4.0"
 features = ["imxrt1062", "rt"]
 git = "https://github.com/imxrt-rs/imxrt-rs.git"
 
