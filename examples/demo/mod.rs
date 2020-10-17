@@ -2,10 +2,10 @@
 
 use core::time::Duration;
 use cortex_m::peripheral::DWT;
+use cortex_m_rt::interrupt;
 use imxrt_hal::gpt;
 use imxrt_hal::gpt::{OutputCompareRegister, GPT};
 use imxrt_hal::ral::interrupt;
-use teensy4_rt::interrupt;
 
 /// Output compare register that we'll use for delays
 const DELAY_OCR: OutputCompareRegister = OutputCompareRegister::Two;

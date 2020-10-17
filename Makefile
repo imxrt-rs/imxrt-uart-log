@@ -1,6 +1,6 @@
 # Simple automation for running tests and examples
 
-RUSTFLAGS="-C link-args=-Tlink.x"
+RUSTFLAGS="-C link-args=-Tt4link.x"
 TARGET=thumbv7em-none-eabihf
 EXAMPLES=target/$(TARGET)/release/examples
 OBJDUMP=arm-none-eabi-objdump

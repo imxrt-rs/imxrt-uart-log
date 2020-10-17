@@ -10,19 +10,17 @@
 #![no_main]
 
 extern crate panic_halt;
-#[cfg(target_arch = "arm")]
-extern crate teensy4_fcb;
 
 mod demo;
 
-use teensy4_rt::entry;
+use cortex_m_rt::entry;
 
 const BAUD: u32 = 115_200;
 const TX_FIFO_SIZE: u8 = 4;
 
 #[entry]
 fn main() -> ! {
-    let imxrt_hal::Peripherals {
+    let teensy4_bsp::Peripherals {
         uart,
         mut ccm,
         dcdc,
@@ -30,7 +28,7 @@ fn main() -> ! {
         gpt2,
         iomuxc,
         ..
-    } = imxrt_hal::Peripherals::take().unwrap();
+    } = teensy4_bsp::Peripherals::take().unwrap();
 
     //
     // UART initialization
