@@ -38,6 +38,7 @@ pub fn delay(gpt: &mut GPT) {
 
 pub struct Setup {
     pub ccm: imxrt_hal::ccm::CCM,
+    pub led: teensy4_bsp::LED,
     pub dcdc: imxrt_hal::dcdc::DCDC,
     pub gpt1: imxrt_hal::gpt::Unclocked,
     pub gpt2: imxrt_hal::gpt::Unclocked,
@@ -104,18 +105,21 @@ pub fn log_loop<F: Fn(&mut GPT)>(mut setup: Setup, func: F) -> ! {
         });
         log::info!("Logging that took {} cycles", count);
         delay(&mut gpt2);
+        setup.led.toggle();
 
         let count = cycles(|| {
             log::info!("Hello world! 3 + 2 = 5");
         });
         log::info!("Logging that took {} cycles", count);
         delay(&mut gpt2);
+        setup.led.toggle();
 
         let count = cycles(|| {
             log::info!("");
         });
         log::info!("Logging that took {} cycles", count);
         delay(&mut gpt2);
+        setup.led.toggle();
 
         let count = cycles(|| {
             // 100 characters
@@ -123,5 +127,6 @@ pub fn log_loop<F: Fn(&mut GPT)>(mut setup: Setup, func: F) -> ! {
         });
         log::info!("Logging that took {} cycles", count);
         delay(&mut gpt2);
+        setup.led.toggle();
     }
 }

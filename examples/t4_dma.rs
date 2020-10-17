@@ -46,6 +46,7 @@ fn main() -> ! {
         dma,
         ..
     } = teensy4_bsp::Peripherals::take().unwrap();
+    let pins = teensy4_bsp::t40::into_pins(iomuxc);
 
     //
     // DMA initialization
@@ -65,10 +66,7 @@ fn main() -> ! {
         imxrt_hal::ccm::uart::ClockSelect::OSC,
         imxrt_hal::ccm::uart::PrescalarSelect::DIVIDE_1,
     );
-    let uart = uarts
-        .uart2
-        .init(iomuxc.ad_b1.p02, iomuxc.ad_b1.p03, BAUD)
-        .unwrap();
+    let uart = uarts.uart2.init(pins.p14, pins.p15, BAUD).unwrap();
 
     let (tx, _) = uart.split();
     imxrt_uart_log::dma::init(
@@ -89,6 +87,7 @@ fn main() -> ! {
             gpt1,
             gpt2,
             dwt: cortex_m::Peripherals::take().unwrap().DWT,
+            led: teensy4_bsp::configure_led(pins.p13),
         },
         |_| {},
     );
