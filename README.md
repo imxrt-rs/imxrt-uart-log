@@ -1,5 +1,18 @@
 # imxrt-uart-log
 
+**Replaced by [`imxrt-log`].** imxrt-hal 0.5 users should use `imxrt-log`,
+since this package only supports imxrt-hal 0.4 and will not be developed
+further.
+
+[`imxrt-log`]: https://crates.io/crates/imxrt-log
+
+If you have a bug fix for this package that you would like released, [contact]
+an imxrt-rs maintainer.
+
+[Contact]: https://imxrt-rs.github.io/book/
+
+---
+
 [![Crates.io][crates-io-badge]][crates-io-url]
 [![Build][build-badge]][build-url]
 
